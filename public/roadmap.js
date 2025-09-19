@@ -107,11 +107,15 @@ class RoadmapManager {
                         </span>
                         <h2 class="axis-title">${axis.title}</h2>
                         <div class="axis-actions">
-                            <input type="range" min="0" max="100" value="${axisProgress}" class="progress-slider"
-                                oninput="event.stopPropagation(); roadmap.updateProgress('${axis.id}', this.value)">
-                            <span class="progress-badge ${axisProgress > 75 ? 'high' : axisProgress > 50 ? 'medium' : ''}">
-                                ${axisProgress}%
-                            </span>
+                            <div class="progress-circle" onclick="event.stopPropagation(); roadmap.editProgress('${axis.id}', ${axisProgress})">
+                                <svg width="32" height="32" class="circular-progress">
+                                    <circle cx="16" cy="16" r="14" stroke="var(--border-color)" stroke-width="2" fill="none"/>
+                                    <circle cx="16" cy="16" r="14" stroke="var(--primary-color)" stroke-width="2" fill="none"
+                                        stroke-dasharray="87.96" stroke-dashoffset="${87.96 - (axisProgress / 100) * 87.96}"
+                                        class="progress-ring" transform="rotate(-90 16 16)"/>
+                                </svg>
+                                <span class="progress-text">${axisProgress}%</span>
+                            </div>
                             <button class="btn-icon" onclick="event.stopPropagation(); roadmap.editItem('${axis.id}')">
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-10.5 10.5-3.252.577.577-3.252 10.5-10.5 2 2z"/>
@@ -150,9 +154,12 @@ class RoadmapManager {
                             </svg>
                         </span>
                         <h3 class="pipeline-title">${item.title}</h3>
-                        <input type="range" min="0" max="100" value="${itemProgress}" class="progress-slider"
-                            oninput="event.stopPropagation(); roadmap.updateProgress('${item.id}', this.value)">
-                        <span class="progress-badge">${itemProgress}%</span>
+                        <div class="pipeline-progress">
+                            <div class="progress-bar-container" onclick="event.stopPropagation(); roadmap.editProgress('${item.id}', ${itemProgress})">
+                                <div class="progress-bar" style="width: ${itemProgress}%"></div>
+                            </div>
+                            <span class="progress-label">${itemProgress}%</span>
+                        </div>
                         <button class="btn-icon" onclick="event.stopPropagation(); roadmap.editItem('${item.id}')">
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                                 <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-10.5 10.5-3.252.577.577-3.252 10.5-10.5 2 2z"/>
@@ -178,9 +185,12 @@ class RoadmapManager {
                     <div class="phase-container" data-id="${phase.id}">
                         <div class="phase-header">
                             <h4 class="phase-title">${phase.title}</h4>
-                            <input type="range" min="0" max="100" value="${phaseProgress}" class="progress-slider"
-                                oninput="event.stopPropagation(); roadmap.updateProgress('${phase.id}', this.value)">
-                            <span class="progress-badge">${phaseProgress}%</span>
+                            <div class="phase-progress">
+                                <div class="progress-bar-container" onclick="event.stopPropagation(); roadmap.editProgress('${phase.id}', ${phaseProgress})">
+                                    <div class="progress-bar" style="width: ${phaseProgress}%"></div>
+                                </div>
+                                <span class="progress-label">${phaseProgress}%</span>
+                            </div>
                         </div>
                         ${this.renderTasks(phase.tasks || [])}
                     </div>
@@ -204,8 +214,9 @@ class RoadmapManager {
         tasks.forEach(task => {
             html += `
                 <div class="task-item" data-id="${task.id}" onclick="roadmap.editTask('${task.id}')">
-                    <input type="range" min="0" max="100" value="${task.progress || 0}" class="progress-slider task-slider"
-                        oninput="event.stopPropagation(); roadmap.updateProgress('${task.id}', this.value)">
+                    <div class="task-progress-dot ${task.progress >= 100 ? 'completed' : task.progress > 0 ? 'in-progress' : 'not-started'}"
+                        onclick="event.stopPropagation(); roadmap.editProgress('${task.id}', ${task.progress || 0})">
+                    </div>
                     <span class="task-title">${task.title}</span>
                     <span class="task-progress">${task.progress || 0}%</span>
                 </div>
@@ -465,6 +476,15 @@ class RoadmapManager {
         }
     }
 
+    editProgress(itemId, currentProgress) {
+        const newProgress = prompt(`Set progress for this item (0-100):`, currentProgress);
+        if (newProgress !== null && !isNaN(newProgress)) {
+            const progress = Math.max(0, Math.min(100, parseInt(newProgress)));
+            this.updateProgress(itemId, progress);
+            this.renderContent(); // Re-render to update visual indicators
+        }
+    }
+
     updateProgress(itemId, progress) {
         const item = this.findItemById(itemId);
         if (item) {
@@ -483,16 +503,6 @@ class RoadmapManager {
                 item.progress = parseInt(progress);
             }
 
-            // Update the progress badge in real-time
-            const progressBadge = document.querySelector(`[data-id="${itemId}"] .progress-badge`);
-            if (progressBadge) {
-                progressBadge.textContent = `${progress}%`;
-            }
-            // Update task progress in real-time
-            const taskProgress = document.querySelector(`[data-id="${itemId}"] .task-progress`);
-            if (taskProgress) {
-                taskProgress.textContent = `${progress}%`;
-            }
             this.saveData();
             this.updateProgressOverview();
         }

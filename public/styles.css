@@ -897,53 +897,152 @@ body {
     }
 }
 
-/* Progress Sliders */
-.progress-slider {
-    width: 100px;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--border-color);
-    outline: none;
-    appearance: none;
+/* Modern Progress Indicators */
+
+/* Circular Progress for Main Axes */
+.progress-circle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    margin-left: auto;
+}
+
+.progress-circle:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+.circular-progress {
+    transform: rotate(-90deg);
+}
+
+.progress-ring {
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.progress-text {
+    position: absolute;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+    pointer-events: none;
+}
+
+/* Progress Bars for Pipelines and Phases */
+.pipeline-progress,
+.phase-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.progress-bar-container {
+    width: 60px;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.progress-bar-container:hover {
+    transform: scaleY(1.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-hover));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    min-width: 2px;
+}
+
+.progress-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    min-width: 30px;
+    text-align: right;
+}
+
+/* Progress Dots for Tasks */
+.task-progress-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.task-progress-dot.not-started {
+    background: var(--border-color);
+    border: 2px solid var(--border-color);
+}
+
+.task-progress-dot.in-progress {
+    background: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.task-progress-dot.completed {
+    background: #10b981;
+    border: 2px solid #10b981;
+    position: relative;
+}
+
+.task-progress-dot.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 8px;
+    font-weight: bold;
+}
+
+.task-progress-dot:hover {
+    transform: scale(1.2);
+}
+
+/* Layout Improvements */
+.axis-header,
+.pipeline-header,
+.phase-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.axis-title,
+.pipeline-title,
+.phase-title {
+    flex: 1;
+    margin: 0;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.task-title {
+    flex: 1;
     margin: 0 0.5rem;
 }
 
-.progress-slider::-webkit-slider-thumb {
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s;
-}
-
-.progress-slider::-webkit-slider-thumb:hover {
-    background: var(--primary-hover);
-    transform: scale(1.1);
-}
-
-.progress-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s;
-}
-
-.progress-slider::-moz-range-track {
-    height: 6px;
-    border-radius: 3px;
-    background: var(--border-color);
-    border: none;
-}
-
-.task-slider {
-    width: 80px;
-    height: 4px;
+.task-progress {
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 30px;
+    text-align: right;
 }
