@@ -9,6 +9,12 @@ This is an interactive roadmap application for managing CustomGPT expansion proj
 - **Frontend**: Vanilla JavaScript SPA with multiple view modes (Tree, Kanban, Timeline, Grid)
 - **Data Storage**: JSON file-based persistence (`data/roadmap.json`)
 - **Architecture**: Client-server with real-time progress tracking and hierarchical data structure
+- **Deployment**: Auto-deployed to Railway.app with GitHub integration
+
+## Live Application
+- **Production URL**: https://customgpt-roadmap-production.up.railway.app
+- **Repository**: https://github.com/DaronVee/customgpt-roadmap
+- **Auto-Deploy**: Configured from `main` branch on GitHub
 
 ## Development Commands
 
@@ -30,6 +36,13 @@ The application runs on `http://localhost:3001` by default.
 - Uses `nodemon` for development auto-reload
 - No build process required (vanilla JS/HTML/CSS)
 - No testing framework configured
+
+### Deployment Configuration
+- **Platform**: Railway.app
+- **Configuration File**: `railway.json`
+- **Builder**: Nixpacks (automatic Node.js detection)
+- **Auto-Deploy**: Enabled from GitHub main branch
+- **Restart Policy**: On failure with max 10 retries
 
 ## Code Architecture
 

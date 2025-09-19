@@ -29,6 +29,9 @@ This is a comprehensive, interactive roadmap application for managing your Custo
 
 ## Installation & Deployment
 
+### 🌐 Live Application
+**Production URL**: https://customgpt-roadmap-production.up.railway.app
+
 ### Local Development
 
 1. **Prerequisites**:
@@ -37,8 +40,9 @@ This is a comprehensive, interactive roadmap application for managing your Custo
 
 2. **Installation**:
    ```bash
-   # Navigate to the project directory
-   cd roadmap-app
+   # Clone the repository
+   git clone https://github.com/DaronVee/customgpt-roadmap.git
+   cd customgpt-roadmap
 
    # Install dependencies
    npm install
@@ -46,15 +50,46 @@ This is a comprehensive, interactive roadmap application for managing your Custo
 
 3. **Running the Application**:
    ```bash
-   # Start the server
+   # Start the development server
+   npm run dev
+   # OR start production server
    npm start
 
    # The application will be available at http://localhost:3001
    ```
 
-### Cloud Deployment
+### 🚀 Auto-Deployment (Railway)
 
-#### Option 1: Deploy to Heroku
+This application is configured for automatic deployment on Railway:
+
+- **Repository**: https://github.com/DaronVee/customgpt-roadmap
+- **Live URL**: https://customgpt-roadmap-production.up.railway.app
+- **Auto-Deploy**: Enabled from `main` branch
+
+#### How Auto-Deployment Works:
+1. Push changes to the `main` branch on GitHub
+2. Railway automatically detects the changes
+3. Builds and deploys the new version using Nixpacks
+4. Application updates within minutes
+
+#### Railway Configuration (`railway.json`):
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
+```
+
+### Alternative Deployment Options
+
+#### Deploy to Heroku
 
 1. Create a `Procfile`:
    ```
@@ -69,16 +104,7 @@ This is a comprehensive, interactive roadmap application for managing your Custo
    git push heroku main
    ```
 
-#### Option 2: Deploy to Railway
-
-1. Connect your GitHub repository to Railway
-2. Railway will automatically detect the Node.js app and deploy
-
-#### Option 3: Deploy to Vercel/Netlify (Static + Serverless)
-
-For serverless deployment, you'll need to modify the backend to use serverless functions.
-
-#### Option 4: Docker Deployment
+#### Docker Deployment
 
 1. Create a `Dockerfile`:
    ```dockerfile
