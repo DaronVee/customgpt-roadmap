@@ -1,0 +1,363 @@
+{
+  "roadmap": {
+    "id": "root",
+    "title": "CustomGPT Expansion & Enhancement",
+    "type": "root",
+    "progress": 0,
+    "validated": false,
+    "axes": [
+      {
+        "id": "ec01d052-d483-4ade-b93d-65f593fee880",
+        "title": "Knowledge Retrieval Enhancement",
+        "type": "axis",
+        "progress": 0,
+        "validated": false,
+        "pipelines": [
+          {
+            "id": "09d295a8-1230-431b-b015-f650efd4631a",
+            "title": "RAG Pipeline",
+            "type": "pipeline",
+            "progress": 0,
+            "validated": false,
+            "phases": [
+              {
+                "id": "43af5f9d-6ee1-4c0e-9f2a-b1b774b951d4",
+                "title": "Knowledge Preparation Phase",
+                "type": "phase",
+                "progress": 0,
+                "validated": false,
+                "tasks": [
+                  {
+                    "id": "e3037200-5e83-4372-9221-838e2d2d48ed",
+                    "title": "Document preprocessing and cleaning",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "c23d12f4-5df6-40f4-92bd-1624d6e533f3",
+                    "title": "Chunking strategies optimization",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "8b66c718-fe9e-4152-87d8-df81943d29ab",
+                    "title": "Metadata extraction and enrichment",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "2857b5b8-24ec-4326-b318-e5af7136a0a5",
+                    "title": "Format standardization",
+                    "validated": false,
+                    "progress": 0
+                  }
+                ]
+              },
+              {
+                "id": "54a071af-d7d8-478a-b8fc-3a5967144416",
+                "title": "Knowledge Ingestion Phase",
+                "type": "phase",
+                "progress": 0,
+                "validated": false,
+                "tasks": [
+                  {
+                    "id": "61ddc50a-946f-427c-88c2-40e6f911e097",
+                    "title": "Vector database setup and configuration",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "5e7021dc-04bb-4d97-aaa0-7e6caa658c17",
+                    "title": "Embedding model selection and implementation",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "4ca73748-41b8-4c11-80c6-aa5cc9f76691",
+                    "title": "Indexing strategies",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "7cb4cc07-2340-4a0a-8673-3e37d7986656",
+                    "title": "Version control for knowledge updates",
+                    "validated": false,
+                    "progress": 0
+                  }
+                ]
+              },
+              {
+                "id": "e23ce444-368e-485e-a9e0-ebe8947074e1",
+                "title": "Pipeline-AI Connection",
+                "type": "phase",
+                "progress": 0,
+                "validated": false,
+                "tasks": [
+                  {
+                    "id": "8aaecff9-8b56-4a93-a6de-af1375f07ede",
+                    "title": "Query interface development",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "a6802d5b-2fcf-4a31-b0e1-1ada8448ad31",
+                    "title": "Context window management",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "c492c8a3-949a-466a-b377-7be6782214a3",
+                    "title": "Retrieval mechanism configuration",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "99384483-5560-4285-a6f9-96f4792bb706",
+                    "title": "Response synthesis setup",
+                    "validated": false,
+                    "progress": 0
+                  }
+                ]
+              },
+              {
+                "id": "bfb5db69-aabc-4367-bc45-200b5d88c6f4",
+                "title": "AI Assistant Optimization",
+                "type": "phase",
+                "progress": 0,
+                "validated": false,
+                "tasks": [
+                  {
+                    "id": "3c218a9b-5dd7-464a-a25c-be57e3e73349",
+                    "title": "Prompt engineering for RAG queries",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "ddf85165-0a25-40c1-be92-76cc531167ec",
+                    "title": "Retrieval threshold tuning",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "69c4f804-93b8-42e2-9cea-3c7918865f3e",
+                    "title": "Re-ranking mechanisms",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "176f7e0b-48f9-48df-8e6b-d8977887dcdd",
+                    "title": "Fallback strategies",
+                    "validated": false,
+                    "progress": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "2858bbaf-b88a-490d-96a2-3f7dde01495d",
+            "title": "Knowledge Graph RAG",
+            "type": "pipeline",
+            "progress": 0,
+            "validated": false,
+            "phases": [
+              {
+                "id": "953a9af8-bde2-4b43-9b64-8b6c8e7116c5",
+                "title": "Knowledge Preparation Phase",
+                "type": "phase",
+                "progress": 0,
+                "validated": false,
+                "tasks": [
+                  {
+                    "id": "773bbd73-515c-4551-9238-be545f914085",
+                    "title": "Entity extraction and recognition",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "43e3b415-2a69-43f2-8986-a8726c46c986",
+                    "title": "Relationship mapping",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "f5f90041-6ac5-4a60-9bf7-3ea2d8f45d9e",
+                    "title": "Ontology design",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "c2064742-9fe9-4545-8a9e-25fde45cef95",
+                    "title": "Graph schema definition",
+                    "validated": false,
+                    "progress": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "5022b5dd-c2d6-41e6-bf2b-9f061871ea44",
+            "title": "Claude Code Knowledge Base",
+            "type": "pipeline",
+            "progress": 0,
+            "validated": false,
+            "phases": [
+              {
+                "id": "7887d559-4e3b-4026-a9a0-53caf895f9c2",
+                "title": "Knowledge Preparation Phase",
+                "type": "phase",
+                "progress": 0,
+                "validated": false,
+                "tasks": [
+                  {
+                    "id": "c2560ca7-58c1-4684-a962-7db8f9f33b35",
+                    "title": "File structure organization",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "fad3cc02-6ca8-40c9-8c7e-bdab12430e8d",
+                    "title": "Documentation format standardization",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "34da0b8e-1e68-49f4-b4f4-fdf5e14c5503",
+                    "title": "Code snippet cataloging",
+                    "validated": false,
+                    "progress": 0
+                  },
+                  {
+                    "id": "b957c911-f979-4ca9-b3b5-47762ea66dc2",
+                    "title": "Sub-agent knowledge segmentation",
+                    "validated": false,
+                    "progress": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cc1f6e88-c3c2-4205-86c2-db19eb62183c",
+        "title": "Tool Integration via MCP",
+        "type": "axis",
+        "progress": 0,
+        "validated": false,
+        "components": [
+          {
+            "id": "4401c2fd-0592-44c6-b856-9b97d5499bb8",
+            "title": "MCP Server Discovery & Selection",
+            "type": "component",
+            "progress": 0,
+            "validated": false,
+            "tasks": [
+              {
+                "id": "370944a1-70b8-470a-a90b-705983805050",
+                "title": "Available MCP servers catalog",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "edb7ce72-ce84-4905-b75e-12978bb1d1d5",
+                "title": "Capability matrix creation",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "7d665c25-c987-42b0-b049-0b1210639f96",
+                "title": "Performance benchmarking",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "b5aba7ee-b659-4f1d-9fe6-63474faf5110",
+                "title": "Compatibility verification",
+                "validated": false,
+                "progress": 0
+              }
+            ]
+          },
+          {
+            "id": "19476c17-72d7-433d-bd01-cd5cbd7c0364",
+            "title": "MCP Client Configuration",
+            "type": "component",
+            "progress": 0,
+            "validated": false,
+            "tasks": [
+              {
+                "id": "9748a6c0-4f55-4947-8a0c-8353b8b65e01",
+                "title": "Request/response patterns",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "a0a35f64-c221-4cbb-8441-195735c606df",
+                "title": "Error handling protocols",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "ac47cf56-2b28-4b41-b80a-f1b87e63c88c",
+                "title": "Retry mechanisms",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "8dbec0b7-128b-4e8e-9809-d036528da4ae",
+                "title": "Timeout configurations",
+                "validated": false,
+                "progress": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "64d11fb9-c2f2-4e22-a47d-c21fd4eb3dd4",
+        "title": "Custom MCP Server Development",
+        "type": "axis",
+        "progress": 0,
+        "validated": false,
+        "phases": [
+          {
+            "id": "8a75e07f-7f34-4434-9d2b-6b780be05ee0",
+            "title": "API-to-MCP Bridge Creation",
+            "type": "phase",
+            "progress": 0,
+            "validated": false,
+            "tasks": [
+              {
+                "id": "dc451e1e-af7d-4da4-8280-a5516f748175",
+                "title": "API specification analysis",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "0bd639d8-cd27-45a0-b9d3-62467c962f3b",
+                "title": "Endpoint mapping design",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "616a66e9-35ee-4ead-85df-c14a60a9b5ce",
+                "title": "Authentication wrapper development",
+                "validated": false,
+                "progress": 0
+              },
+              {
+                "id": "598c6bdc-fdf2-4b91-a1fe-70d84c6b1c33",
+                "title": "Rate limiting implementation",
+                "validated": false,
+                "progress": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "lastModified": "2025-09-19T20:16:19.556Z"
+}

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustomGPT Expansion Roadmap</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="app-title">CustomGPT Expansion Roadmap</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="roadmap.addAxis()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                        </svg>
+                        Add Axis
+                    </button>
+                    <button class="btn btn-secondary" onclick="roadmap.toggleViewMode()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
+                        </svg>
+                        <span id="view-mode-text">Tree View</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="roadmap.exportData()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                        </svg>
+                        Export
+                    </button>
+                    <button class="btn btn-secondary" onclick="roadmap.saveProgress()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+                        </svg>
+                        Save
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Progress Overview -->
+        <div class="progress-overview">
+            <div class="progress-cards">
+                <div class="progress-card">
+                    <div class="progress-card-header">
+                        <span class="progress-label">Overall Progress</span>
+                        <span class="progress-percentage" id="overall-progress">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill overall" id="overall-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-card-header">
+                        <span class="progress-label">Validated Items</span>
+                        <span class="progress-count" id="validated-count">0 / 0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill validated" id="validated-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-card-header">
+                        <span class="progress-label">Active Axes</span>
+                        <span class="progress-count" id="active-axes">0 / 0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill active" id="active-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h3>Navigation</h3>
+                    <button class="btn-icon" onclick="roadmap.toggleSidebar()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.146 3.646a.5.5 0 0 0 0 .708L7.793 8l-3.647 3.646a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708 0zM11.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-1 0v-9a.5.5 0 0 1 .5-.5z"/>
+                        </svg>
+                    </button>
+                </div>
+                <nav class="sidebar-nav" id="sidebar-nav">
+                    <!-- Dynamic navigation will be inserted here -->
+                </nav>
+            </aside>
+
+            <!-- Roadmap View -->
+            <div class="roadmap-container" id="roadmap-container">
+                <div class="view-controls">
+                    <div class="view-tabs">
+                        <button class="tab-btn active" data-view="tree" onclick="roadmap.switchView('tree')">Tree View</button>
+                        <button class="tab-btn" data-view="kanban" onclick="roadmap.switchView('kanban')">Kanban View</button>
+                        <button class="tab-btn" data-view="timeline" onclick="roadmap.switchView('timeline')">Timeline View</button>
+                        <button class="tab-btn" data-view="grid" onclick="roadmap.switchView('grid')">Grid View</button>
+                    </div>
+                    <div class="view-actions">
+                        <button class="btn-icon" onclick="roadmap.expandAll()">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zm7-7a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 1z"/>
+                            </svg>
+                        </button>
+                        <button class="btn-icon" onclick="roadmap.collapseAll()">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dynamic roadmap content will be inserted here -->
+                <div class="roadmap-content" id="roadmap-content">
+                    <!-- Loading state -->
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <p>Loading roadmap...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div class="modal" id="edit-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Edit Item</h3>
+                    <button class="btn-icon" onclick="roadmap.closeModal()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-form">
+                        <div class="form-group">
+                            <label for="item-title">Title</label>
+                            <input type="text" id="item-title" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="item-description">Description</label>
+                            <textarea id="item-description" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="item-progress">Progress (%)</label>
+                            <div class="progress-input-group">
+                                <input type="range" id="item-progress" min="0" max="100" value="0" class="progress-slider">
+                                <span id="progress-value" class="progress-value">0%</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="item-validated">
+                                <span>Mark as Validated</span>
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-danger" onclick="roadmap.deleteItem()">Delete</button>
+                            <div class="form-actions-right">
+                                <button type="button" class="btn btn-secondary" onclick="roadmap.closeModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toast-container"></div>
+    </div>
+
+    <script src="roadmap.js"></script>
+</body>
+</html>
