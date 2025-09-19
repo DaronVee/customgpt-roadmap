@@ -107,8 +107,8 @@ class RoadmapManager {
                         </span>
                         <h2 class="axis-title">${axis.title}</h2>
                         <div class="axis-actions">
-                            <input type="checkbox" class="validation-checkbox" ${axis.validated ? 'checked' : ''} 
-                                onclick="event.stopPropagation(); roadmap.toggleValidation('${axis.id}')">
+                            <input type="range" min="0" max="100" value="${axisProgress}" class="progress-slider"
+                                oninput="event.stopPropagation(); roadmap.updateProgress('${axis.id}', this.value)">
                             <span class="progress-badge ${axisProgress > 75 ? 'high' : axisProgress > 50 ? 'medium' : ''}">
                                 ${axisProgress}%
                             </span>
@@ -150,8 +150,8 @@ class RoadmapManager {
                             </svg>
                         </span>
                         <h3 class="pipeline-title">${item.title}</h3>
-                        <input type="checkbox" class="validation-checkbox" ${item.validated ? 'checked' : ''} 
-                            onclick="event.stopPropagation(); roadmap.toggleValidation('${item.id}')">
+                        <input type="range" min="0" max="100" value="${itemProgress}" class="progress-slider"
+                            oninput="event.stopPropagation(); roadmap.updateProgress('${item.id}', this.value)">
                         <span class="progress-badge">${itemProgress}%</span>
                         <button class="btn-icon" onclick="event.stopPropagation(); roadmap.editItem('${item.id}')">
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -168,7 +168,7 @@ class RoadmapManager {
     }
 
     renderPipelineContent(pipeline) {
-        let html = '<div class="pipeline-content">';
+        let html = `<div class="pipeline-content" id="pipeline-content-${pipeline.id}">`;
         
         // Handle phases if they exist
         if (pipeline.phases && pipeline.phases.length > 0) {
@@ -178,8 +178,8 @@ class RoadmapManager {
                     <div class="phase-container" data-id="${phase.id}">
                         <div class="phase-header">
                             <h4 class="phase-title">${phase.title}</h4>
-                            <input type="checkbox" class="validation-checkbox" ${phase.validated ? 'checked' : ''} 
-                                onclick="event.stopPropagation(); roadmap.toggleValidation('${phase.id}')">
+                            <input type="range" min="0" max="100" value="${phaseProgress}" class="progress-slider"
+                                oninput="event.stopPropagation(); roadmap.updateProgress('${phase.id}', this.value)">
                             <span class="progress-badge">${phaseProgress}%</span>
                         </div>
                         ${this.renderTasks(phase.tasks || [])}
@@ -204,8 +204,8 @@ class RoadmapManager {
         tasks.forEach(task => {
             html += `
                 <div class="task-item" data-id="${task.id}" onclick="roadmap.editTask('${task.id}')">
-                    <input type="checkbox" class="task-checkbox" ${task.validated ? 'checked' : ''} 
-                        onclick="event.stopPropagation(); roadmap.toggleTaskValidation('${task.id}')">
+                    <input type="range" min="0" max="100" value="${task.progress || 0}" class="progress-slider task-slider"
+                        oninput="event.stopPropagation(); roadmap.updateProgress('${task.id}', this.value)">
                     <span class="task-title">${task.title}</span>
                     <span class="task-progress">${task.progress || 0}%</span>
                 </div>
@@ -435,9 +435,9 @@ class RoadmapManager {
     }
 
     togglePipeline(pipelineId) {
-        const container = document.querySelector(`.pipeline-container[data-id="${pipelineId}"] .pipeline-content`);
+        const container = document.getElementById(`pipeline-content-${pipelineId}`);
         const icon = document.querySelector(`.pipeline-container[data-id="${pipelineId}"] .expand-icon`);
-        
+
         if (container) {
             container.classList.toggle('hidden');
             icon.classList.toggle('expanded');
@@ -461,6 +461,39 @@ class RoadmapManager {
             task.progress = task.validated ? 100 : 0;
             this.saveData();
             this.renderContent();
+            this.updateProgressOverview();
+        }
+    }
+
+    updateProgress(itemId, progress) {
+        const item = this.findItemById(itemId);
+        if (item) {
+            // Only allow direct progress setting for leaf items (tasks without children)
+            const hasChildren = (item.tasks && item.tasks.length > 0) ||
+                               (item.phases && item.phases.length > 0) ||
+                               (item.pipelines && item.pipelines.length > 0) ||
+                               (item.components && item.components.length > 0);
+
+            if (!hasChildren) {
+                // This is a leaf item (task), set progress directly
+                item.progress = parseInt(progress);
+            } else {
+                // This item has children, progress should be calculated automatically
+                // We'll still allow manual override but recalculate after
+                item.progress = parseInt(progress);
+            }
+
+            // Update the progress badge in real-time
+            const progressBadge = document.querySelector(`[data-id="${itemId}"] .progress-badge`);
+            if (progressBadge) {
+                progressBadge.textContent = `${progress}%`;
+            }
+            // Update task progress in real-time
+            const taskProgress = document.querySelector(`[data-id="${itemId}"] .task-progress`);
+            if (taskProgress) {
+                taskProgress.textContent = `${progress}%`;
+            }
+            this.saveData();
             this.updateProgressOverview();
         }
     }

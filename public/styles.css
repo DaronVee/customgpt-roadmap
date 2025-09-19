@@ -395,7 +395,8 @@ body {
     padding-left: 2rem;
 }
 
-.axis-content.hidden {
+.axis-content.hidden,
+.pipeline-content.hidden {
     display: none;
 }
 
@@ -894,4 +895,55 @@ body {
     .grid-view {
         grid-template-columns: 1fr;
     }
+}
+
+/* Progress Sliders */
+.progress-slider {
+    width: 100px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border-color);
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    margin: 0 0.5rem;
+}
+
+.progress-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+}
+
+.progress-slider::-webkit-slider-thumb:hover {
+    background: var(--primary-hover);
+    transform: scale(1.1);
+}
+
+.progress-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+}
+
+.progress-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border-color);
+    border: none;
+}
+
+.task-slider {
+    width: 80px;
+    height: 4px;
 }
