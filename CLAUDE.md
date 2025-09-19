@@ -14,7 +14,73 @@ This is an interactive roadmap application for managing CustomGPT expansion proj
 ## Live Application
 - **Production URL**: https://customgpt-roadmap-production.up.railway.app
 - **Repository**: https://github.com/DaronVee/customgpt-roadmap
-- **Auto-Deploy**: Configured from `main` branch on GitHub
+- **Auto-Deploy**: Configured from `master` branch on GitHub
+
+## ⚠️ CRITICAL DEPLOYMENT WORKFLOW
+
+**ALWAYS FOLLOW THIS SYSTEMATIC DEPLOYMENT PROCESS:**
+
+### 1. Remember: This is NOT a Local App
+- The app is **DEPLOYED on Railway**, not running locally
+- Changes made locally are **NOT visible** until pushed to GitHub
+- Railway auto-deploys from the `master` branch within 2-3 minutes
+
+### 2. Development & Testing Workflow
+```bash
+# For local testing only (optional):
+npm start  # Runs on http://localhost:3001
+
+# DO NOT confuse local testing with production deployment!
+```
+
+### 3. Systematic Deployment Process
+**MANDATORY STEPS after making any code changes:**
+
+```bash
+# Step 1: Check what changed
+git status
+git diff
+
+# Step 2: Stage all changes
+git add .
+
+# Step 3: Verify staged changes
+git status
+
+# Step 4: Create descriptive commit
+git commit -m "$(cat <<'EOF'
+Brief description of changes made
+
+- Specific improvement 1
+- Specific improvement 2
+- Specific improvement 3
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+
+# Step 5: Push to trigger Railway deployment
+git push origin master
+
+# Step 6: Wait 2-3 minutes, then verify at:
+# https://customgpt-roadmap-production.up.railway.app
+```
+
+### 4. Deployment Verification Checklist
+- [ ] Code changes committed and pushed to GitHub
+- [ ] Railway deployment triggered (check GitHub commits)
+- [ ] Wait 2-3 minutes for Railway build completion
+- [ ] Test changes on production URL
+- [ ] Verify mobile responsiveness if UI changes were made
+
+### 5. Common Deployment Mistakes to Avoid
+- ❌ **NEVER** assume local changes are live without deployment
+- ❌ **NEVER** test only locally and assume production works
+- ❌ **NEVER** forget to push after making changes
+- ❌ **NEVER** skip the verification step on the live URL
+- ✅ **ALWAYS** follow the systematic 6-step deployment process above
 
 ## Development Commands
 
@@ -82,39 +148,41 @@ Each item has:
 
 ## UI Design & Progress System
 
-### Current Progress Indicators (v2.0)
-The application features a modern, multi-tiered progress visualization system:
+### Current Progress Indicators (v3.0 - Enhanced UX)
+The application features a modern, fully accessible progress visualization system:
 
 **Main Axes (Level 1)**:
 - **Circular Progress Rings**: Beautiful SVG-based circular indicators showing completion percentage
-- **Click-to-edit**: Direct progress editing via prompt dialog
-- **Hover Effects**: Smooth scaling animations on interaction
+- **Inline Editing**: Smooth inline editor replaces prompt dialogs for better UX
+- **Touch Optimized**: 44px minimum touch targets for mobile accessibility
+- **Keyboard Navigation**: Full keyboard support with Enter/Space activation
 
 **Pipelines/Phases (Level 2-3)**:
 - **Horizontal Progress Bars**: Clean, compact bars with gradient styling
 - **Right-aligned Layout**: Progress indicators positioned on the right for clean text alignment
-- **Interactive**: Click to edit progress with input validation (0-100%)
+- **Inline Editing**: Click/keyboard activation opens positioned inline editor
+- **Touch Targets**: Enhanced for mobile with proper hit areas
 
 **Tasks (Level 4)**:
-- **Smart Progress Dots**: Color-coded status indicators
+- **Smart Progress Dots**: Color-coded status indicators with pseudo-elements for touch
   - Gray: Not started (0% progress)
   - Blue with glow: In progress (1-99% progress)
   - Green with checkmark: Completed (100% progress)
-- **Minimal Footprint**: Small, unobtrusive but informative
+- **Accessibility**: Full ARIA labels and keyboard navigation support
 
-### Layout & Alignment
-- **Flexbox-based Structure**: All items properly aligned with consistent spacing
-- **Hierarchical Indentation**: Clear visual hierarchy with appropriate nesting
-- **Text Alignment**: Clean left-aligned text with right-aligned progress indicators
-- **Responsive Design**: Scales appropriately across different screen sizes
+### Mobile & Accessibility (v3.0)
+- **Mobile-Responsive Sidebar**: Slides in/out with overlay on mobile devices
+- **Touch Optimization**: All interactive elements meet 44px minimum requirements
+- **ARIA Compliance**: Comprehensive screen reader support with proper labels
+- **Keyboard Navigation**: Complete keyboard accessibility with focus indicators
+- **High Contrast**: Supports prefers-contrast and prefers-reduced-motion
+- **Skeleton Loading**: Beautiful loading states for better perceived performance
 
-### Future UI Improvements (Planned)
-The UI system is designed for extensibility and will be enhanced with:
-- Advanced progress visualization options
-- Customizable themes and color schemes
-- Enhanced interaction patterns
-- Mobile-optimized touch interfaces
-- Accessibility improvements
+### Layout & Responsive Design
+- **Mobile-First**: Responsive design that works perfectly on all devices
+- **Flexbox Structure**: Properly aligned with consistent 8px spacing grid
+- **Visual Hierarchy**: Clear differentiation between hierarchy levels
+- **Focus Management**: Visible focus indicators for keyboard users
 
 ### Technical Implementation
 - **SVG Progress Rings**: Custom circular progress using stroke-dasharray
