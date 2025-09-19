@@ -250,4 +250,5 @@ app.put('/api/roadmap/item/:id', async (req, res) => {
 app.listen(PORT, async () => {
   await initializeData();
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log('UI improvements deployed - v3.0');
 });
