@@ -3,7 +3,9 @@ class RoadmapManager {
         this.data = null;
         this.currentView = 'tree';
         this.currentItemId = null;
-        this.apiUrl = 'http://localhost:3001/api';
+        this.apiUrl = window.location.hostname === 'localhost'
+            ? 'http://localhost:3001/api'
+            : `${window.location.protocol}//${window.location.host}/api`;
         this.init();
     }
 
