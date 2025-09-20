@@ -41,11 +41,12 @@ const DATA_FILE = path.join(__dirname, 'data', 'roadmap.json');
 // Helper function to add status to items based on progress
 const addStatusToItem = (item) => {
   if (!item.status) {
-    // Set initial status based on current progress
+    // Set more conservative initial status based on progress
+    // Default to 'not_started' unless there's clear completion evidence
     if (item.progress === 0) item.status = 'not_started';
-    else if (item.progress < 50) item.status = 'in_progress';
-    else if (item.progress < 100) item.status = 'review';
-    else item.status = 'completed';
+    else if (item.progress < 25) item.status = 'in_progress';
+    else if (item.progress === 100) item.status = 'completed';
+    else item.status = 'in_progress'; // Conservative default for partial progress
   }
 
   // Add default fields if missing
