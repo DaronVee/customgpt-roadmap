@@ -182,7 +182,10 @@ class RoadmapManager {
                                 <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
                             </svg>
                         </span>
-                        <h2 class="axis-title">${axis.title}</h2>
+                        <div class="item-title-with-status">
+                            <h2 class="axis-title">${axis.title}</h2>
+                            ${this.createStatusBadge(axis)}
+                        </div>
                         <div class="axis-actions">
                             <div class="progress-circle" onclick="event.stopPropagation(); roadmap.editProgress('${axis.id}', ${axisProgress}, event)" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); event.stopPropagation(); roadmap.editProgress('${axis.id}', ${axisProgress}, event); }" role="button" aria-label="Edit progress: ${axisProgress}% complete" tabindex="0">
                                 <svg width="32" height="32" class="circular-progress" aria-hidden="true">
@@ -192,6 +195,7 @@ class RoadmapManager {
                                         class="progress-ring" transform="rotate(-90 16 16)"/>
                                 </svg>
                                 <span class="progress-text" aria-hidden="true">${axisProgress}%</span>
+                                ${this.getProgressSource(axis) !== 'direct' ? `<div class="progress-source-icon ${this.getProgressSource(axis)}" title="Progress ${this.getProgressSource(axis)}"></div>` : ''}
                             </div>
                             <button class="btn-icon" onclick="event.stopPropagation(); roadmap.editItem('${axis.id}')" aria-label="Edit ${axis.title} details">
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -233,12 +237,15 @@ class RoadmapManager {
                                 <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
                             </svg>
                         </span>
-                        <h3 class="pipeline-title">${item.title}</h3>
+                        <div class="item-title-with-status">
+                            <h3 class="pipeline-title">${item.title}</h3>
+                            ${this.createStatusBadge(item)}
+                        </div>
                         <div class="pipeline-progress">
+                            ${this.createProgressIndicator(item)}
                             <div class="progress-bar-container" onclick="event.stopPropagation(); roadmap.editProgress('${item.id}', ${itemProgress}, event)" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); event.stopPropagation(); roadmap.editProgress('${item.id}', ${itemProgress}, event); }" role="button" aria-label="Edit progress: ${itemProgress}% complete" tabindex="0">
                                 <div class="progress-bar" style="width: ${itemProgress}%" aria-hidden="true"></div>
                             </div>
-                            <span class="progress-label" aria-hidden="true">${itemProgress}%</span>
                         </div>
                         <button class="btn-icon" onclick="event.stopPropagation(); roadmap.editItem('${item.id}')" aria-label="Edit ${item.title} details">
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -266,12 +273,15 @@ class RoadmapManager {
                 html += `
                     <div class="phase-container" data-id="${phase.id}">
                         <div class="phase-header">
-                            <h4 class="phase-title">${phase.title}</h4>
+                            <div class="item-title-with-status">
+                                <h4 class="phase-title">${phase.title}</h4>
+                                ${this.createStatusBadge(phase)}
+                            </div>
                             <div class="phase-progress">
+                                ${this.createProgressIndicator(phase)}
                                 <div class="progress-bar-container" onclick="event.stopPropagation(); roadmap.editProgress('${phase.id}', ${phaseProgress}, event)" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); event.stopPropagation(); roadmap.editProgress('${phase.id}', ${phaseProgress}, event); }" role="button" aria-label="Edit progress: ${phaseProgress}% complete" tabindex="0">
                                     <div class="progress-bar" style="width: ${phaseProgress}%" aria-hidden="true"></div>
                                 </div>
-                                <span class="progress-label" aria-hidden="true">${phaseProgress}%</span>
                             </div>
                         </div>
                         ${this.renderTasks(phase.tasks || [])}
@@ -298,14 +308,22 @@ class RoadmapManager {
             const statusText = task.progress >= 100 ? 'completed' : task.progress > 0 ? 'in progress' : 'not started';
 
             html += `
-                <div class="task-item" data-id="${task.id}" onclick="roadmap.editTask('${task.id}')" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); roadmap.editTask('${task.id}'); }" role="button" aria-label="Edit task: ${task.title}" tabindex="0">
+                <div class="task-item item-container" data-id="${task.id}" onclick="roadmap.editTask('${task.id}')" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); roadmap.editTask('${task.id}'); }" role="button" aria-label="Edit task: ${task.title}" tabindex="0">
                     <div class="task-progress-dot ${progressStatus}"
                         onclick="event.stopPropagation(); roadmap.editProgress('${task.id}', ${task.progress || 0}, event)"
                         onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); event.stopPropagation(); roadmap.editProgress('${task.id}', ${task.progress || 0}, event); }"
                         role="button" aria-label="Edit progress for ${task.title}: ${task.progress || 0}% ${statusText}" tabindex="0">
                     </div>
-                    <span class="task-title">${task.title}</span>
-                    <span class="task-progress" aria-hidden="true">${task.progress || 0}%</span>
+                    <div class="task-content">
+                        <div class="item-title-with-status">
+                            <span class="task-title">${task.title}</span>
+                            ${this.createStatusBadge(task)}
+                        </div>
+                        <div class="item-metrics">
+                            ${this.createProgressIndicator(task)}
+                        </div>
+                    </div>
+                    ${this.createQuickStatusActions(task)}
                 </div>
             `;
         });
@@ -318,7 +336,7 @@ class RoadmapManager {
             return '<div class="empty-state">No data to display in Kanban view.</div>';
         }
         
-        const columns = ['Not Started', 'In Progress', 'Review', 'Completed'];
+        const columns = ['Not Started', 'In Progress', 'Review', 'Completed', 'Blocked'];
         let html = '<div class="kanban-view">';
         
         columns.forEach(column => {
@@ -341,22 +359,28 @@ class RoadmapManager {
 
     getItemsForColumn(column) {
         const items = [];
-        
+
+        // Map column names to status values
+        const columnStatusMap = {
+            'Not Started': 'not_started',
+            'In Progress': 'in_progress',
+            'Review': 'review',
+            'Completed': 'completed',
+            'Blocked': 'blocked'
+        };
+
+        const targetStatus = columnStatusMap[column];
+
         this.data.axes.forEach(axis => {
             const axisItems = axis.pipelines || axis.components || axis.phases || [];
             axisItems.forEach(item => {
-                const progress = this.calculateProgress(item);
-                if (
-                    (column === 'Not Started' && progress === 0) ||
-                    (column === 'In Progress' && progress > 0 && progress < 50) ||
-                    (column === 'Review' && progress >= 50 && progress < 100) ||
-                    (column === 'Completed' && progress === 100)
-                ) {
+                const itemStatus = item.status || 'not_started';
+                if (itemStatus === targetStatus) {
                     items.push({ ...item, axisTitle: axis.title });
                 }
             });
         });
-        
+
         return items;
     }
 
@@ -366,14 +390,16 @@ class RoadmapManager {
 
         items.forEach(item => {
             const progress = this.calculateProgress(item);
-            const progressColor = progress === 0 ? 'not-started' :
-                                 progress < 50 ? 'in-progress' :
-                                 progress < 100 ? 'review' : 'completed';
+            const status = item.status || 'not_started';
+            const isDivergent = this.isStatusProgressDivergent(item);
 
             html += `
-                <div class="kanban-card ${progressColor}" draggable="true" data-id="${item.id}" data-progress="${progress}">
+                <div class="kanban-card item-container" draggable="true" data-id="${item.id}" data-status="${status}">
                     <div class="kanban-card-header">
-                        <h4 class="kanban-card-title">${item.title}</h4>
+                        <div class="item-title-with-status">
+                            <h4 class="kanban-card-title">${item.title}</h4>
+                            ${isDivergent ? '<div class="divergence-indicator" title="Status and progress may be misaligned"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg></div>' : ''}
+                        </div>
                         <div class="kanban-card-drag-handle">
                             <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
                                 <path d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8zm0-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 5zm0 6a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 11z"/>
@@ -382,7 +408,9 @@ class RoadmapManager {
                     </div>
                     <div class="kanban-card-meta">
                         <span class="kanban-card-axis">${item.axisTitle}</span>
-                        <span class="kanban-card-progress">${progress}%</span>
+                        <div class="item-metrics">
+                            ${this.createProgressIndicator(item)}
+                        </div>
                     </div>
                     <div class="kanban-card-actions">
                         <button class="kanban-quick-edit" onclick="event.stopPropagation(); roadmap.quickEditProgress('${item.id}', ${progress})" title="Quick edit progress">
@@ -390,6 +418,7 @@ class RoadmapManager {
                                 <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-10.5 10.5-3.252.577.577-3.252 10.5-10.5 2 2z"/>
                             </svg>
                         </button>
+                        ${this.createStatusSuggestion(item)}
                     </div>
                 </div>
             `;
@@ -479,8 +508,13 @@ class RoadmapManager {
                                                     <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
                                                 </svg>
                                             </button>
-                                            <h3 class="timeline-axis-title">${axis.title}</h3>
-                                            <div class="timeline-axis-progress">${this.calculateProgress(axis)}%</div>
+                                            <div class="item-title-with-status">
+                                                <h3 class="timeline-axis-title">${axis.title}</h3>
+                                                ${this.createStatusBadge(axis)}
+                                            </div>
+                                            <div class="item-metrics">
+                                                ${this.createProgressIndicator(axis)}
+                                            </div>
                                         </div>
                                         <div class="timeline-axis-track ${this.getExpandedState(`timeline-${axis.id}`) ? 'expanded' : 'collapsed'}">
                                             ${items.map(item => this.renderTimelineItem(item, timespan, currentDate)).join('')}
@@ -499,8 +533,7 @@ class RoadmapManager {
 
     renderTimelineItem(item, timespan, currentDate) {
         const progress = this.calculateProgress(item);
-        const statusClass = progress === 0 ? 'not-started' :
-                           progress < 100 ? 'in-progress' : 'completed';
+        const status = item.status || 'not_started';
 
         // Calculate estimated timeline based on progress and current date
         const startDate = item.startDate ? new Date(item.startDate) : currentDate;
@@ -511,24 +544,37 @@ class RoadmapManager {
         const duration = this.calculateTimelineDuration(startDate, endDate, timespan);
         const progressWidth = (progress / 100) * duration;
 
-        const isOverdue = progress < 100 && endDate < currentDate;
-        const isMilestone = item.validated || progress === 100;
+        const isOverdue = status !== 'completed' && status !== 'blocked' && endDate < currentDate;
+        const isMilestone = item.validated || status === 'completed';
+        const isDivergent = this.isStatusProgressDivergent(item);
+
+        const statusIcons = {
+            'not_started': '○',
+            'in_progress': '⚡',
+            'review': '👁️',
+            'completed': '✅',
+            'blocked': '🚫'
+        };
 
         return `
-            <div class="timeline-item-row ${statusClass} ${isOverdue ? 'overdue' : ''}" data-id="${item.id}">
+            <div class="timeline-item-row status-${status} ${isOverdue ? 'overdue' : ''} ${isDivergent ? 'divergent' : ''}" data-id="${item.id}">
                 <div class="timeline-item-label">
-                    <div class="timeline-item-icon ${statusClass}">
-                        ${isMilestone ? '🎯' : progress > 0 ? '⚡' : '○'}
+                    <div class="timeline-item-icon status-${status}">
+                        ${statusIcons[status] || '○'}
                     </div>
                     <div class="timeline-item-info">
-                        <div class="timeline-item-title">${item.title}</div>
+                        <div class="item-title-with-status">
+                            <div class="timeline-item-title">${item.title}</div>
+                            ${this.createStatusBadge(item)}
+                        </div>
                         <div class="timeline-item-meta">
-                            ${progress}% • ${estimatedDuration}w • ${item.validated ? 'Validated' : 'In Progress'}
+                            ${this.createProgressIndicator(item)} • ${estimatedDuration}w • ${item.validated ? 'Validated' : status.replace('_', ' ')}
+                            ${isDivergent ? ' • <span class="divergence-warning">Check Status</span>' : ''}
                         </div>
                     </div>
                 </div>
                 <div class="timeline-item-bar-container">
-                    <div class="timeline-item-bar ${statusClass}"
+                    <div class="timeline-item-bar status-${status}"
                          style="left: ${startPosition}%; width: ${duration}%;"
                          onclick="roadmap.editTimelineItem('${item.id}')"
                          title="Click to edit timeline">
@@ -538,6 +584,7 @@ class RoadmapManager {
                             <div class="timeline-handle end" onmousedown="roadmap.startTimelineDrag('${item.id}', 'end', event)"></div>
                         </div>
                         ${isMilestone ? '<div class="timeline-milestone-marker">♦</div>' : ''}
+                        ${isDivergent ? '<div class="timeline-divergence-indicator">⚠</div>' : ''}
                     </div>
                     ${isOverdue ? '<div class="timeline-overdue-indicator">!</div>' : ''}
                 </div>
@@ -630,8 +677,9 @@ class RoadmapManager {
             const axisProgress = this.calculateProgress(axis);
             const items = axis.pipelines || axis.components || axis.phases || [];
             const validatedItems = items.filter(i => i.validated).length;
-            const inProgressItems = items.filter(i => this.calculateProgress(i) > 0 && this.calculateProgress(i) < 100).length;
-            const completedItems = items.filter(i => this.calculateProgress(i) === 100).length;
+            const inProgressItems = items.filter(i => (i.status === 'in_progress' || i.status === 'review')).length;
+            const completedItems = items.filter(i => i.status === 'completed').length;
+            const blockedItems = items.filter(i => i.status === 'blocked').length;
 
             // Calculate priority score (higher progress + more items = higher priority)
             const priorityScore = axisProgress + (items.length * 10);
@@ -647,10 +695,14 @@ class RoadmapManager {
                 <div class="grid-card enhanced priority-${priorityLevel} ${isExpanded ? 'expanded' : ''} ${isFocused ? 'focused' : ''}" data-id="${axis.id}">
                     <div class="grid-card-header" onclick="roadmap.toggleGridCard('${axis.id}')">
                         <div class="grid-card-title-section">
-                            <h3 class="grid-card-title">${axis.title}</h3>
+                            <div class="item-title-with-status">
+                                <h3 class="grid-card-title">${axis.title}</h3>
+                                ${this.createStatusBadge(axis)}
+                            </div>
                             <div class="grid-card-badges">
                                 <span class="grid-card-badge priority-${priorityLevel}">${priorityLevel} priority</span>
                                 ${axisProgress > 0 ? '<span class="grid-card-badge active">Active</span>' : ''}
+                                ${this.isStatusProgressDivergent(axis) ? '<span class="grid-card-badge divergent">Check Status</span>' : ''}
                             </div>
                         </div>
                         <div class="grid-card-expand-icon ${isExpanded ? 'expanded' : ''}">
@@ -671,6 +723,7 @@ class RoadmapManager {
                             <div class="progress-center">
                                 <span class="progress-percentage">${axisProgress}%</span>
                                 <span class="progress-label">Complete</span>
+                                ${this.getProgressSource(axis) !== 'direct' ? `<div class="progress-source-indicator mini">${this.getProgressSource(axis)}</div>` : ''}
                             </div>
                         </div>
 
@@ -705,6 +758,15 @@ class RoadmapManager {
                                 <span class="stat-label">Completed</span>
                             </div>
                         </div>
+                        ${blockedItems > 0 ? `
+                        <div class="stat-item-enhanced blocked">
+                            <div class="stat-icon">🚫</div>
+                            <div class="stat-content">
+                                <span class="stat-value">${blockedItems}</span>
+                                <span class="stat-label">Blocked</span>
+                            </div>
+                        </div>
+                        ` : ''}
                         <div class="stat-item-enhanced">
                             <div class="stat-icon">🎯</div>
                             <div class="stat-content">
@@ -752,16 +814,21 @@ class RoadmapManager {
 
         items.forEach(item => {
             const progress = this.calculateProgress(item);
-            const statusClass = progress === 0 ? 'not-started' :
-                               progress < 50 ? 'in-progress' :
-                               progress < 100 ? 'review' : 'completed';
+            const status = item.status || 'not_started';
+            const isDivergent = this.isStatusProgressDivergent(item);
 
             html += `
-                <div class="grid-sub-item ${statusClass}" onclick="event.stopPropagation(); roadmap.editItem('${item.id}')">
-                    <div class="grid-sub-item-status"></div>
+                <div class="grid-sub-item status-${status} ${isDivergent ? 'divergent' : ''}" onclick="event.stopPropagation(); roadmap.editItem('${item.id}')">
+                    <div class="grid-sub-item-status status-${status}"></div>
                     <div class="grid-sub-item-content">
-                        <span class="grid-sub-item-title">${item.title}</span>
-                        <span class="grid-sub-item-progress">${progress}%</span>
+                        <div class="item-title-with-status">
+                            <span class="grid-sub-item-title">${item.title}</span>
+                            ${this.createStatusBadge(item)}
+                        </div>
+                        <div class="item-metrics">
+                            ${this.createProgressIndicator(item)}
+                            ${isDivergent ? '<span class="divergence-warning">⚠</span>' : ''}
+                        </div>
                     </div>
                 </div>
             `;
@@ -772,27 +839,231 @@ class RoadmapManager {
     }
 
     calculateProgress(item) {
-        if (item.progress !== undefined) {
+        // Check for manual progress override first
+        if (item.progressOverride !== undefined && item.progressOverride !== null) {
+            return item.progressOverride;
+        }
+
+        // Use direct progress if available (leaf items)
+        if (item.progress !== undefined && item.progress !== null) {
             return item.progress;
         }
-        
-        // Calculate based on sub-items
+
+        // Calculate based on sub-items with weighting
         let totalProgress = 0;
-        let itemCount = 0;
-        
+        let totalWeight = 0;
+
         // Check for different types of sub-items
         const subItems = item.pipelines || item.components || item.phases || item.tasks || [];
-        
+
         if (subItems.length > 0) {
             subItems.forEach(subItem => {
-                totalProgress += this.calculateProgress(subItem);
-                itemCount++;
+                const weight = subItem.progressWeight || 1;
+                totalProgress += this.calculateProgress(subItem) * weight;
+                totalWeight += weight;
             });
-            
-            return itemCount > 0 ? Math.round(totalProgress / itemCount) : 0;
+
+            return totalWeight > 0 ? Math.round(totalProgress / totalWeight) : 0;
         }
-        
+
         return item.validated ? 100 : 0;
+    }
+
+    // Helper to determine if progress is manually set vs calculated
+    getProgressSource(item) {
+        if (item.progressOverride !== undefined && item.progressOverride !== null) {
+            return 'override';
+        }
+
+        if (item.progress !== undefined && item.progress !== null) {
+            const subItems = item.pipelines || item.components || item.phases || item.tasks || [];
+            return subItems.length > 0 ? 'manual' : 'direct';
+        }
+
+        return 'calculated';
+    }
+
+    // Helper to suggest status based on progress
+    suggestStatus(item) {
+        const progress = this.calculateProgress(item);
+
+        if (progress === 0) return 'not_started';
+        if (progress === 100) return 'completed';
+        if (progress >= 75) return 'review';
+        return 'in_progress';
+    }
+
+    // Helper to check if status and progress are misaligned
+    isStatusProgressDivergent(item) {
+        const progress = this.calculateProgress(item);
+        const status = item.status || 'not_started';
+
+        // Define acceptable ranges for each status
+        const statusRanges = {
+            'not_started': [0, 10],
+            'in_progress': [1, 90],
+            'review': [25, 99],
+            'completed': [90, 100],
+            'blocked': [0, 100] // Can be blocked at any progress
+        };
+
+        const range = statusRanges[status] || [0, 100];
+        return progress < range[0] || progress > range[1];
+    }
+
+    // Create status badge HTML
+    createStatusBadge(item, showQuickActions = false) {
+        const status = item.status || 'not_started';
+        const statusLabels = {
+            'not_started': 'Not Started',
+            'in_progress': 'In Progress',
+            'review': 'Review',
+            'completed': 'Completed',
+            'blocked': 'Blocked'
+        };
+
+        let html = `<span class="status-badge ${status}" title="${statusLabels[status]}">${statusLabels[status]}</span>`;
+
+        if (showQuickActions) {
+            html += this.createQuickStatusActions(item);
+        }
+
+        return html;
+    }
+
+    // Create progress indicator with source information
+    createProgressIndicator(item) {
+        const progress = this.calculateProgress(item);
+        const source = this.getProgressSource(item);
+        const isDivergent = this.isStatusProgressDivergent(item);
+
+        const sourceIcons = {
+            'calculated': `<svg class="progress-source-icon calculated" viewBox="0 0 16 16" fill="currentColor" title="Calculated from children">
+                <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+            </svg>`,
+            'manual': `<svg class="progress-source-icon manual" viewBox="0 0 16 16" fill="currentColor" title="Manually set">
+                <path d="M13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642-0.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001z"/>
+            </svg>`,
+            'override': `<svg class="progress-source-icon override" viewBox="0 0 16 16" fill="currentColor" title="Override set">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.061L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+            </svg>`,
+            'direct': ''
+        };
+
+        let html = `
+            <div class="progress-indicator">
+                <span class="progress-value">${progress}%</span>
+                ${sourceIcons[source] || ''}
+        `;
+
+        if (isDivergent) {
+            html += `
+                <div class="divergence-indicator" title="Status and progress may be misaligned">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </svg>
+                    Check
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    // Create quick status action buttons
+    createQuickStatusActions(item) {
+        const currentStatus = item.status || 'not_started';
+        const statuses = ['not_started', 'in_progress', 'review', 'completed', 'blocked'];
+
+        let html = '<div class="quick-status-actions">';
+
+        statuses.forEach(status => {
+            if (status !== currentStatus) {
+                const statusIcons = {
+                    'not_started': '⭕',
+                    'in_progress': '🔄',
+                    'review': '👁️',
+                    'completed': '✅',
+                    'blocked': '🚫'
+                };
+
+                html += `
+                    <button class="quick-status-btn ${status}"
+                            onclick="roadmap.updateItemStatus('${item.id}', '${status}')"
+                            title="Mark as ${status.replace('_', ' ')}">
+                        ${statusIcons[status]}
+                    </button>
+                `;
+            }
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    // Create status suggestion popup
+    createStatusSuggestion(item) {
+        const currentStatus = item.status || 'not_started';
+        const suggestedStatus = this.suggestStatus(item);
+
+        if (currentStatus === suggestedStatus) {
+            return '';
+        }
+
+        const statusLabels = {
+            'not_started': 'Not Started',
+            'in_progress': 'In Progress',
+            'review': 'Review',
+            'completed': 'Completed',
+            'blocked': 'Blocked'
+        };
+
+        return `
+            <div class="status-suggestion" id="status-suggestion-${item.id}">
+                <div class="status-suggestion-text">
+                    Suggested: ${statusLabels[suggestedStatus]} (based on ${this.calculateProgress(item)}% progress)
+                </div>
+                <div class="status-suggestion-actions">
+                    <button class="status-suggestion-btn primary"
+                            onclick="roadmap.acceptStatusSuggestion('${item.id}', '${suggestedStatus}')">
+                        Accept
+                    </button>
+                    <button class="status-suggestion-btn"
+                            onclick="roadmap.dismissStatusSuggestion('${item.id}')">
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Update item status
+    updateItemStatus(itemId, newStatus) {
+        const item = this.findItemById(itemId);
+        if (item) {
+            item.status = newStatus;
+            this.saveData();
+            this.renderContent();
+            this.updateProgressOverview();
+            this.showToast(`Status updated to ${newStatus.replace('_', ' ')}`, 'success');
+        }
+    }
+
+    // Accept status suggestion
+    acceptStatusSuggestion(itemId, suggestedStatus) {
+        this.updateItemStatus(itemId, suggestedStatus);
+        this.dismissStatusSuggestion(itemId);
+    }
+
+    // Dismiss status suggestion
+    dismissStatusSuggestion(itemId) {
+        const suggestion = document.getElementById(`status-suggestion-${itemId}`);
+        if (suggestion) {
+            suggestion.remove();
+        }
     }
 
     updateProgressOverview() {
@@ -1536,27 +1807,36 @@ class RoadmapManager {
         const item = this.findItemById(itemId);
         if (!item) return;
 
-        // Map columns to progress ranges
-        const progressMap = {
-            'Not Started': 0,
-            'In Progress': 25,
-            'Review': 75,
-            'Completed': 100
+        // Map columns to status values
+        const statusMap = {
+            'Not Started': 'not_started',
+            'In Progress': 'in_progress',
+            'Review': 'review',
+            'Completed': 'completed',
+            'Blocked': 'blocked'
         };
 
-        const newProgress = progressMap[targetColumn];
-        if (newProgress !== undefined) {
-            const oldProgress = this.calculateProgress(item);
-            item.progress = newProgress;
+        const newStatus = statusMap[targetColumn];
+        if (newStatus !== undefined) {
+            const oldStatus = item.status || 'not_started';
+            const currentProgress = this.calculateProgress(item);
+
+            // Update status
+            item.status = newStatus;
+
+            // Check if status and progress are now divergent
+            const isDivergent = this.isStatusProgressDivergent(item);
 
             this.saveData();
             this.renderContent(); // Re-render Kanban view
             this.updateProgressOverview();
 
-            this.showToast(
-                `"${item.title}" moved to ${targetColumn} (${newProgress}% progress)`,
-                'success'
-            );
+            let message = `"${item.title}" moved to ${targetColumn}`;
+            if (isDivergent) {
+                message += ` (${currentProgress}% progress - may need review)`;
+            }
+
+            this.showToast(message, isDivergent ? 'warning' : 'success');
         }
     }
 

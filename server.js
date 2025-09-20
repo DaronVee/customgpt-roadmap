@@ -38,9 +38,53 @@ app.use(express.static('public', {
 // Data file path
 const DATA_FILE = path.join(__dirname, 'data', 'roadmap.json');
 
+// Helper function to add status to items based on progress
+const addStatusToItem = (item) => {
+  if (!item.status) {
+    // Set initial status based on current progress
+    if (item.progress === 0) item.status = 'not_started';
+    else if (item.progress < 50) item.status = 'in_progress';
+    else if (item.progress < 100) item.status = 'review';
+    else item.status = 'completed';
+  }
+
+  // Add default fields if missing
+  if (item.progressWeight === undefined) item.progressWeight = 1;
+
+  return item;
+};
+
+// Recursively migrate data structure
+const migrateDataStructure = (item) => {
+  addStatusToItem(item);
+
+  // Process children
+  if (item.axes) item.axes.forEach(migrateDataStructure);
+  if (item.pipelines) item.pipelines.forEach(migrateDataStructure);
+  if (item.components) item.components.forEach(migrateDataStructure);
+  if (item.phases) item.phases.forEach(migrateDataStructure);
+  if (item.tasks) item.tasks.forEach(migrateDataStructure);
+
+  return item;
+};
+
 // Initialize data file if it doesn't exist
 const initializeData = async () => {
   await fs.ensureDir(path.join(__dirname, 'data'));
+
+  // Check if data file exists and migrate if needed
+  if (await fs.pathExists(DATA_FILE)) {
+    const existingData = await fs.readJson(DATA_FILE);
+    if (!existingData.roadmap.status) {
+      console.log('Migrating data structure to include status fields...');
+      migrateDataStructure(existingData.roadmap);
+      existingData.lastModified = new Date().toISOString();
+      await fs.writeJson(DATA_FILE, existingData, { spaces: 2 });
+      console.log('Data migration completed successfully');
+    }
+    return;
+  }
+
   if (!await fs.pathExists(DATA_FILE)) {
     const initialData = {
       roadmap: {
@@ -48,6 +92,8 @@ const initializeData = async () => {
         title: 'CustomGPT Expansion & Enhancement',
         type: 'root',
         progress: 0,
+        status: 'not_started',
+        progressWeight: 1,
         validated: false,
         axes: [
           {
@@ -55,6 +101,8 @@ const initializeData = async () => {
             title: 'Knowledge Retrieval Enhancement',
             type: 'axis',
             progress: 0,
+            status: 'not_started',
+            progressWeight: 1,
             validated: false,
             pipelines: [
               {
@@ -225,6 +273,9 @@ const initializeData = async () => {
       },
       lastModified: new Date().toISOString()
     };
+
+    // Apply migration to ensure all items have status fields
+    migrateDataStructure(initialData.roadmap);
     await fs.writeJson(DATA_FILE, initialData, { spaces: 2 });
   }
 };
