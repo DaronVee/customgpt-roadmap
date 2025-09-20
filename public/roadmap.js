@@ -883,14 +883,23 @@ class RoadmapManager {
         return 'calculated';
     }
 
-    // Helper to suggest status based on progress
+    // Helper to suggest status based on progress and current status
     suggestStatus(item) {
         const progress = this.calculateProgress(item);
+        const currentStatus = item.status || 'not_started';
 
+        // Strong suggestions based on progress
         if (progress === 0) return 'not_started';
         if (progress === 100) return 'completed';
-        if (progress >= 75) return 'review';
-        return 'in_progress';
+
+        // Nuanced suggestions based on current context
+        if (progress >= 80 && currentStatus === 'in_progress') return 'review';
+        if (progress >= 90) return 'review'; // High progress suggests review phase
+        if (progress >= 1 && currentStatus === 'not_started') return 'in_progress';
+        if (progress < 25 && currentStatus === 'review') return 'in_progress'; // Too early for review
+
+        // Default to current status if no strong suggestion
+        return currentStatus === 'blocked' ? 'in_progress' : currentStatus;
     }
 
     // Helper to check if status and progress are misaligned
@@ -898,17 +907,21 @@ class RoadmapManager {
         const progress = this.calculateProgress(item);
         const status = item.status || 'not_started';
 
-        // Define acceptable ranges for each status
-        const statusRanges = {
-            'not_started': [0, 10],
-            'in_progress': [1, 90],
-            'review': [25, 99],
-            'completed': [90, 100],
-            'blocked': [0, 100] // Can be blocked at any progress
-        };
-
-        const range = statusRanges[status] || [0, 100];
-        return progress < range[0] || progress > range[1];
+        // More nuanced divergence detection - only flag truly problematic combinations
+        switch (status) {
+            case 'not_started':
+                return progress > 15; // Allow small prep work
+            case 'in_progress':
+                return false; // In progress can be at any % (work in progress)
+            case 'review':
+                return progress < 10; // Review should have some substantial work done
+            case 'completed':
+                return progress < 75; // Completed should be mostly done (allow scope reduction)
+            case 'blocked':
+                return false; // Can be blocked at any progress
+            default:
+                return false;
+        }
     }
 
     // Create status badge HTML
@@ -973,31 +986,59 @@ class RoadmapManager {
         return html;
     }
 
-    // Create quick status action buttons
+    // Create quick status action buttons with logical progression
     createQuickStatusActions(item) {
         const currentStatus = item.status || 'not_started';
-        const statuses = ['not_started', 'in_progress', 'review', 'completed', 'blocked'];
+        const progress = this.calculateProgress(item);
 
+        // Define logical next steps based on current status and progress
+        const logicalTransitions = {
+            'not_started': ['in_progress', 'blocked'], // Can start work or get blocked
+            'in_progress': ['review', 'completed', 'blocked', 'not_started'], // Can go to review, complete, get blocked, or reset
+            'review': ['completed', 'in_progress', 'blocked'], // Can complete, send back to work, or get blocked
+            'completed': ['in_progress'], // Can reopen if needed
+            'blocked': ['not_started', 'in_progress'] // Can unblock to start or continue
+        };
+
+        // Special case: if progress is 100%, always allow direct completion
+        if (progress === 100 && currentStatus !== 'completed') {
+            if (!logicalTransitions[currentStatus].includes('completed')) {
+                logicalTransitions[currentStatus].push('completed');
+            }
+        }
+
+        // Special case: if progress is 0%, prefer not_started over review
+        if (progress === 0 && currentStatus !== 'not_started') {
+            logicalTransitions[currentStatus] = logicalTransitions[currentStatus].filter(s => s !== 'review');
+        }
+
+        const allowedTransitions = logicalTransitions[currentStatus] || [];
         let html = '<div class="quick-status-actions">';
 
-        statuses.forEach(status => {
-            if (status !== currentStatus) {
-                const statusIcons = {
-                    'not_started': '⭕',
-                    'in_progress': '🔄',
-                    'review': '👁️',
-                    'completed': '✅',
-                    'blocked': '🚫'
-                };
+        const statusIcons = {
+            'not_started': '⭕',
+            'in_progress': '🔄',
+            'review': '👁️',
+            'completed': '✅',
+            'blocked': '🚫'
+        };
 
-                html += `
-                    <button class="quick-status-btn ${status}"
-                            onclick="roadmap.updateItemStatus('${item.id}', '${status}')"
-                            title="Mark as ${status.replace('_', ' ')}">
-                        ${statusIcons[status]}
-                    </button>
-                `;
-            }
+        const statusLabels = {
+            'not_started': 'Reset to Not Started',
+            'in_progress': 'Start/Continue Work',
+            'review': 'Send for Review',
+            'completed': 'Mark Complete',
+            'blocked': 'Mark as Blocked'
+        };
+
+        allowedTransitions.forEach(status => {
+            html += `
+                <button class="quick-status-btn ${status}"
+                        onclick="roadmap.updateItemStatus('${item.id}', '${status}')"
+                        title="${statusLabels[status]}">
+                    ${statusIcons[status]}
+                </button>
+            `;
         });
 
         html += '</div>';
