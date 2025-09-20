@@ -1427,16 +1427,7 @@ class RoadmapManager {
             return this.expandedState[key];
         }
 
-        // Smart auto-expand: expand items with progress > 0
-        if (this.data) {
-            const itemId = key.replace(/^(axis|pipeline)-/, '');
-            const item = this.findItemById(itemId);
-            if (item && this.calculateProgress(item) > 0) {
-                return true;
-            }
-        }
-
-        // Default to collapsed
+        // Everything starts collapsed by default for cleaner initial view
         return false;
     }
 
