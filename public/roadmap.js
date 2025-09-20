@@ -6,6 +6,11 @@ class RoadmapManager {
         this.apiUrl = window.location.hostname === 'localhost'
             ? 'http://localhost:3001/api'
             : `${window.location.protocol}//${window.location.host}/api`;
+        this.expandedState = this.loadExpandedState();
+        this.gridFocusMode = false;
+        this.timelineShowMilestones = true;
+        this.timelineShowDependencies = false;
+        this.timelineFilter = 'all';
         this.init();
     }
 
@@ -165,10 +170,14 @@ class RoadmapManager {
         
         this.data.axes.forEach(axis => {
             const axisProgress = this.calculateProgress(axis);
+            const isExpanded = this.getExpandedState(`axis-${axis.id}`);
+            const expandClass = isExpanded ? 'expanded' : '';
+            const contentClass = isExpanded ? '' : 'hidden';
+
             html += `
                 <div class="axis-container" data-id="${axis.id}">
                     <div class="axis-header" onclick="roadmap.toggleAxis('${axis.id}')">
-                        <span class="expand-icon expanded">
+                        <span class="expand-icon ${expandClass}">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                                 <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
                             </svg>
@@ -196,7 +205,7 @@ class RoadmapManager {
                             </button>
                         </div>
                     </div>
-                    <div class="axis-content" id="axis-content-${axis.id}">
+                    <div class="axis-content ${contentClass}" id="axis-content-${axis.id}">
                         ${this.renderAxisContent(axis)}
                     </div>
                 </div>
@@ -213,10 +222,13 @@ class RoadmapManager {
         
         items.forEach(item => {
             const itemProgress = this.calculateProgress(item);
+            const isExpanded = this.getExpandedState(`pipeline-${item.id}`);
+            const expandClass = isExpanded ? 'expanded' : '';
+
             html += `
                 <div class="pipeline-container" data-id="${item.id}">
                     <div class="pipeline-header" onclick="roadmap.togglePipeline('${item.id}')">
-                        <span class="expand-icon expanded">
+                        <span class="expand-icon ${expandClass}">
                             <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
                                 <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
                             </svg>
@@ -243,7 +255,9 @@ class RoadmapManager {
     }
 
     renderPipelineContent(pipeline) {
-        let html = `<div class="pipeline-content" id="pipeline-content-${pipeline.id}">`;
+        const isExpanded = this.getExpandedState(`pipeline-${pipeline.id}`);
+        const contentClass = isExpanded ? '' : 'hidden';
+        let html = `<div class="pipeline-content ${contentClass}" id="pipeline-content-${pipeline.id}">`;
         
         // Handle phases if they exist
         if (pipeline.phases && pipeline.phases.length > 0) {
@@ -309,12 +323,12 @@ class RoadmapManager {
         
         columns.forEach(column => {
             html += `
-                <div class="kanban-column">
+                <div class="kanban-column" data-column="${column}">
                     <div class="kanban-column-header">
                         <h3 class="kanban-column-title">${column}</h3>
                         <span class="kanban-count">${this.getItemsForColumn(column).length}</span>
                     </div>
-                    <div class="kanban-cards">
+                    <div class="kanban-cards" data-column="${column}">
                         ${this.renderKanbanCards(column)}
                     </div>
                 </div>
@@ -349,98 +363,410 @@ class RoadmapManager {
     renderKanbanCards(column) {
         const items = this.getItemsForColumn(column);
         let html = '';
-        
+
         items.forEach(item => {
+            const progress = this.calculateProgress(item);
+            const progressColor = progress === 0 ? 'not-started' :
+                                 progress < 50 ? 'in-progress' :
+                                 progress < 100 ? 'review' : 'completed';
+
             html += `
-                <div class="kanban-card" draggable="true" data-id="${item.id}">
-                    <h4 class="kanban-card-title">${item.title}</h4>
+                <div class="kanban-card ${progressColor}" draggable="true" data-id="${item.id}" data-progress="${progress}">
+                    <div class="kanban-card-header">
+                        <h4 class="kanban-card-title">${item.title}</h4>
+                        <div class="kanban-card-drag-handle">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8zm0-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 5zm0 6a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 11z"/>
+                            </svg>
+                        </div>
+                    </div>
                     <div class="kanban-card-meta">
-                        <span>${item.axisTitle}</span>
-                        <span>${this.calculateProgress(item)}%</span>
+                        <span class="kanban-card-axis">${item.axisTitle}</span>
+                        <span class="kanban-card-progress">${progress}%</span>
+                    </div>
+                    <div class="kanban-card-actions">
+                        <button class="kanban-quick-edit" onclick="event.stopPropagation(); roadmap.quickEditProgress('${item.id}', ${progress})" title="Quick edit progress">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-10.5 10.5-3.252.577.577-3.252 10.5-10.5 2 2z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             `;
         });
-        
-        return html || '<div class="empty-column">No items</div>';
+
+        return html || '<div class="empty-column-drop-zone">Drop items here</div>';
     }
 
     renderTimelineView() {
         if (!this.data.axes || this.data.axes.length === 0) {
             return '<div class="empty-state">No data to display in Timeline view.</div>';
         }
-        
-        let html = '<div class="timeline-view">';
-        
-        this.data.axes.forEach(axis => {
-            html += `
-                <div class="timeline-axis">
-                    <h2 class="timeline-axis-title">${axis.title}</h2>
-                    <div class="timeline-track">
-            `;
-            
-            const items = axis.pipelines || axis.components || axis.phases || [];
-            items.forEach(item => {
-                html += `
-                    <div class="timeline-item">
-                        <div class="timeline-marker ${item.validated ? 'validated' : ''}"></div>
-                        <div class="timeline-content">
-                            <h3 class="timeline-title">${item.title}</h3>
-                            <div class="timeline-meta">
-                                Progress: ${this.calculateProgress(item)}% | 
-                                ${item.validated ? 'Validated' : 'In Progress'}
-                            </div>
+
+        // Generate next 12 months for the timeline
+        const timespan = this.generateTimespan();
+        const currentDate = new Date();
+
+        let html = `
+            <div class="timeline-view-enhanced">
+                <div class="timeline-header">
+                    <div class="timeline-controls">
+                        <button class="timeline-control-btn ${this.timelineShowMilestones ? 'active' : ''}" onclick="roadmap.toggleTimelineMilestones()" title="Show milestones">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.061L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                            </svg>
+                            Milestones
+                        </button>
+                        <button class="timeline-control-btn ${this.timelineShowDependencies ? 'active' : ''}" onclick="roadmap.toggleTimelineDependencies()" title="Show dependencies">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 0 0-3 0v9a2.5 2.5 0 0 1-5 0V5a.5.5 0 0 1 1 0v7a1.5 1.5 0 0 0 3 0V3z"/>
+                            </svg>
+                            Dependencies
+                        </button>
+                        <select class="timeline-filter" onchange="roadmap.filterTimeline(this.value)">
+                            <option value="all">All Items</option>
+                            <option value="active">Active Only</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="timeline-legend">
+                        <div class="legend-item">
+                            <div class="legend-color not-started"></div>
+                            <span>Not Started</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color in-progress"></div>
+                            <span>In Progress</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color completed"></div>
+                            <span>Completed</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color milestone"></div>
+                            <span>Milestone</span>
                         </div>
                     </div>
-                `;
-            });
-            
-            html += '</div></div>';
-        });
-        
-        html += '</div>';
+                </div>
+
+                <div class="timeline-gantt">
+                    <div class="timeline-grid">
+                        <div class="timeline-grid-header">
+                            <div class="timeline-task-header">Tasks</div>
+                            <div class="timeline-months-header">
+                                ${timespan.map(month => `
+                                    <div class="timeline-month" data-month="${month.key}">
+                                        <div class="timeline-month-label">${month.label}</div>
+                                        <div class="timeline-weeks">
+                                            ${Array.from({length: month.weeks}, (_, i) => `<div class="timeline-week"></div>`).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="timeline-content-grid">
+                            ${this.data.axes.map(axis => {
+                                const items = axis.pipelines || axis.components || axis.phases || [];
+                                return `
+                                    <div class="timeline-axis-section">
+                                        <div class="timeline-axis-header">
+                                            <button class="timeline-expand-btn ${this.getExpandedState(`timeline-${axis.id}`) ? 'expanded' : ''}"
+                                                    onclick="roadmap.toggleTimelineAxis('${axis.id}')">
+                                                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                                                </svg>
+                                            </button>
+                                            <h3 class="timeline-axis-title">${axis.title}</h3>
+                                            <div class="timeline-axis-progress">${this.calculateProgress(axis)}%</div>
+                                        </div>
+                                        <div class="timeline-axis-track ${this.getExpandedState(`timeline-${axis.id}`) ? 'expanded' : 'collapsed'}">
+                                            ${items.map(item => this.renderTimelineItem(item, timespan, currentDate)).join('')}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
         return html;
+    }
+
+    renderTimelineItem(item, timespan, currentDate) {
+        const progress = this.calculateProgress(item);
+        const statusClass = progress === 0 ? 'not-started' :
+                           progress < 100 ? 'in-progress' : 'completed';
+
+        // Calculate estimated timeline based on progress and current date
+        const startDate = item.startDate ? new Date(item.startDate) : currentDate;
+        const estimatedDuration = item.estimatedWeeks || this.estimateTimelineForItem(item);
+        const endDate = item.endDate ? new Date(item.endDate) : new Date(startDate.getTime() + estimatedDuration * 7 * 24 * 60 * 60 * 1000);
+
+        const startPosition = this.calculateTimelinePosition(startDate, timespan);
+        const duration = this.calculateTimelineDuration(startDate, endDate, timespan);
+        const progressWidth = (progress / 100) * duration;
+
+        const isOverdue = progress < 100 && endDate < currentDate;
+        const isMilestone = item.validated || progress === 100;
+
+        return `
+            <div class="timeline-item-row ${statusClass} ${isOverdue ? 'overdue' : ''}" data-id="${item.id}">
+                <div class="timeline-item-label">
+                    <div class="timeline-item-icon ${statusClass}">
+                        ${isMilestone ? '🎯' : progress > 0 ? '⚡' : '○'}
+                    </div>
+                    <div class="timeline-item-info">
+                        <div class="timeline-item-title">${item.title}</div>
+                        <div class="timeline-item-meta">
+                            ${progress}% • ${estimatedDuration}w • ${item.validated ? 'Validated' : 'In Progress'}
+                        </div>
+                    </div>
+                </div>
+                <div class="timeline-item-bar-container">
+                    <div class="timeline-item-bar ${statusClass}"
+                         style="left: ${startPosition}%; width: ${duration}%;"
+                         onclick="roadmap.editTimelineItem('${item.id}')"
+                         title="Click to edit timeline">
+                        <div class="timeline-progress-fill" style="width: ${progressWidth}%"></div>
+                        <div class="timeline-item-handles">
+                            <div class="timeline-handle start" onmousedown="roadmap.startTimelineDrag('${item.id}', 'start', event)"></div>
+                            <div class="timeline-handle end" onmousedown="roadmap.startTimelineDrag('${item.id}', 'end', event)"></div>
+                        </div>
+                        ${isMilestone ? '<div class="timeline-milestone-marker">♦</div>' : ''}
+                    </div>
+                    ${isOverdue ? '<div class="timeline-overdue-indicator">!</div>' : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    generateTimespan() {
+        const months = [];
+        const currentDate = new Date();
+
+        for (let i = 0; i < 12; i++) {
+            const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+
+            // Calculate weeks in month
+            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            const weeks = Math.ceil(daysInMonth / 7);
+
+            months.push({
+                key: monthKey,
+                label: monthLabel,
+                weeks: weeks,
+                date: date
+            });
+        }
+
+        return months;
+    }
+
+    calculateTimelinePosition(date, timespan) {
+        const startOfTimespan = timespan[0].date;
+        const endOfTimespan = new Date(timespan[timespan.length - 1].date.getFullYear(), timespan[timespan.length - 1].date.getMonth() + 1, 0);
+        const totalDays = (endOfTimespan - startOfTimespan) / (1000 * 60 * 60 * 24);
+        const daysSinceStart = Math.max(0, (date - startOfTimespan) / (1000 * 60 * 60 * 24));
+
+        return Math.min(100, (daysSinceStart / totalDays) * 100);
+    }
+
+    calculateTimelineDuration(startDate, endDate, timespan) {
+        const startOfTimespan = timespan[0].date;
+        const endOfTimespan = new Date(timespan[timespan.length - 1].date.getFullYear(), timespan[timespan.length - 1].date.getMonth() + 1, 0);
+        const totalDays = (endOfTimespan - startOfTimespan) / (1000 * 60 * 60 * 24);
+        const durationDays = Math.max(1, (endDate - startDate) / (1000 * 60 * 60 * 24));
+
+        return Math.min(80, (durationDays / totalDays) * 100);
+    }
+
+    estimateTimelineForItem(item) {
+        // Estimate timeline based on number of sub-items and complexity
+        const subItems = item.phases || item.tasks || [];
+        const baseWeeks = 2;
+        const complexityMultiplier = Math.max(1, subItems.length * 0.5);
+        return Math.ceil(baseWeeks * complexityMultiplier);
     }
 
     renderGridView() {
         if (!this.data.axes || this.data.axes.length === 0) {
             return '<div class="empty-state">No data to display in Grid view.</div>';
         }
-        
-        let html = '<div class="grid-view">';
-        
-        this.data.axes.forEach(axis => {
+
+        // Sort axes by progress (descending) to show most active first
+        const sortedAxes = [...this.data.axes].sort((a, b) => {
+            return this.calculateProgress(b) - this.calculateProgress(a);
+        });
+
+        let html = `
+            <div class="grid-view-header">
+                <div class="grid-controls">
+                    <button class="grid-control-btn ${this.gridFocusMode ? 'active' : ''}" onclick="roadmap.toggleFocusMode()" title="Focus on active items">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M5.5 3a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM2 7.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/>
+                            <path d="m13 13 3 3"/>
+                        </svg>
+                        Focus Mode
+                    </button>
+                    <button class="grid-control-btn" onclick="roadmap.expandAllGridCards()" title="Expand all cards">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zm7-7a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 1z"/>
+                        </svg>
+                        Expand All
+                    </button>
+                </div>
+            </div>
+            <div class="grid-view">
+        `;
+
+        sortedAxes.forEach(axis => {
             const axisProgress = this.calculateProgress(axis);
             const items = axis.pipelines || axis.components || axis.phases || [];
             const validatedItems = items.filter(i => i.validated).length;
-            
+            const inProgressItems = items.filter(i => this.calculateProgress(i) > 0 && this.calculateProgress(i) < 100).length;
+            const completedItems = items.filter(i => this.calculateProgress(i) === 100).length;
+
+            // Calculate priority score (higher progress + more items = higher priority)
+            const priorityScore = axisProgress + (items.length * 10);
+            const priorityLevel = priorityScore > 50 ? 'high' : priorityScore > 20 ? 'medium' : 'low';
+
+            // Estimate completion based on current velocity (mock calculation)
+            const completionWeeks = axisProgress > 0 ? Math.ceil((100 - axisProgress) / Math.max(axisProgress / 4, 5)) : '∞';
+
+            const isExpanded = this.getExpandedState(`grid-${axis.id}`);
+            const isFocused = this.gridFocusMode && axisProgress > 0;
+
             html += `
-                <div class="grid-card" data-id="${axis.id}" onclick="roadmap.editItem('${axis.id}')">
-                    <div class="grid-card-header">
-                        <h3 class="grid-card-title">${axis.title}</h3>
-                        <span class="grid-card-badge">${axis.type}</span>
-                    </div>
-                    <div class="progress-bar" style="margin: 1rem 0">
-                        <div class="progress-fill overall" style="width: ${axisProgress}%"></div>
-                    </div>
-                    <div class="grid-card-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">${axisProgress}%</span>
-                            <span class="stat-label">Progress</span>
+                <div class="grid-card enhanced priority-${priorityLevel} ${isExpanded ? 'expanded' : ''} ${isFocused ? 'focused' : ''}" data-id="${axis.id}">
+                    <div class="grid-card-header" onclick="roadmap.toggleGridCard('${axis.id}')">
+                        <div class="grid-card-title-section">
+                            <h3 class="grid-card-title">${axis.title}</h3>
+                            <div class="grid-card-badges">
+                                <span class="grid-card-badge priority-${priorityLevel}">${priorityLevel} priority</span>
+                                ${axisProgress > 0 ? '<span class="grid-card-badge active">Active</span>' : ''}
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${validatedItems}</span>
-                            <span class="stat-label">Validated</span>
+                        <div class="grid-card-expand-icon ${isExpanded ? 'expanded' : ''}">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${items.length}</span>
-                            <span class="stat-label">Total Items</span>
+                    </div>
+
+                    <div class="grid-card-progress-section">
+                        <div class="progress-circle-container">
+                            <svg width="80" height="80" class="progress-donut" aria-hidden="true">
+                                <circle cx="40" cy="40" r="35" stroke="var(--border-color)" stroke-width="6" fill="none"/>
+                                <circle cx="40" cy="40" r="35" stroke="var(--primary-color)" stroke-width="6" fill="none"
+                                    stroke-dasharray="219.9" stroke-dashoffset="${219.9 - (axisProgress / 100) * 219.9}"
+                                    class="progress-ring" transform="rotate(-90 40 40)"/>
+                            </svg>
+                            <div class="progress-center">
+                                <span class="progress-percentage">${axisProgress}%</span>
+                                <span class="progress-label">Complete</span>
+                            </div>
+                        </div>
+
+                        <div class="progress-quick-edit">
+                            <label class="progress-slider-label">Quick Progress:</label>
+                            <input type="range" class="progress-slider" min="0" max="100" value="${axisProgress}"
+                                onchange="roadmap.updateAxisProgress('${axis.id}', this.value)"
+                                oninput="this.nextElementSibling.textContent = this.value + '%'">
+                            <span class="progress-slider-value">${axisProgress}%</span>
+                        </div>
+                    </div>
+
+                    <div class="grid-card-stats-enhanced">
+                        <div class="stat-item-enhanced">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-content">
+                                <span class="stat-value">${items.length}</span>
+                                <span class="stat-label">Total Items</span>
+                            </div>
+                        </div>
+                        <div class="stat-item-enhanced">
+                            <div class="stat-icon">⚡</div>
+                            <div class="stat-content">
+                                <span class="stat-value">${inProgressItems}</span>
+                                <span class="stat-label">In Progress</span>
+                            </div>
+                        </div>
+                        <div class="stat-item-enhanced">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-content">
+                                <span class="stat-value">${completedItems}</span>
+                                <span class="stat-label">Completed</span>
+                            </div>
+                        </div>
+                        <div class="stat-item-enhanced">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-content">
+                                <span class="stat-value">${completionWeeks === '∞' ? '∞' : completionWeeks + 'w'}</span>
+                                <span class="stat-label">ETA</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-card-expandable ${isExpanded ? 'expanded' : ''}">
+                        <div class="grid-card-items">
+                            <h4 class="grid-card-items-title">Sub-Items:</h4>
+                            ${this.renderGridCardItems(items)}
+                        </div>
+
+                        <div class="grid-card-actions">
+                            <button class="grid-action-btn primary" onclick="event.stopPropagation(); roadmap.addSubItem('${axis.id}')" title="Add new item">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                                </svg>
+                                Add Item
+                            </button>
+                            <button class="grid-action-btn secondary" onclick="event.stopPropagation(); roadmap.editItem('${axis.id}')" title="Edit details">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-10.5 10.5-3.252.577.577-3.252 10.5-10.5 2 2z"/>
+                                </svg>
+                                Edit
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
         });
-        
+
+        html += '</div>';
+        return html;
+    }
+
+    renderGridCardItems(items) {
+        if (!items || items.length === 0) {
+            return '<p class="no-items">No items yet. Click "Add Item" to get started.</p>';
+        }
+
+        let html = '<div class="grid-sub-items">';
+
+        items.forEach(item => {
+            const progress = this.calculateProgress(item);
+            const statusClass = progress === 0 ? 'not-started' :
+                               progress < 50 ? 'in-progress' :
+                               progress < 100 ? 'review' : 'completed';
+
+            html += `
+                <div class="grid-sub-item ${statusClass}" onclick="event.stopPropagation(); roadmap.editItem('${item.id}')">
+                    <div class="grid-sub-item-status"></div>
+                    <div class="grid-sub-item-content">
+                        <span class="grid-sub-item-title">${item.title}</span>
+                        <span class="grid-sub-item-progress">${progress}%</span>
+                    </div>
+                </div>
+            `;
+        });
+
         html += '</div>';
         return html;
     }
@@ -511,10 +837,14 @@ class RoadmapManager {
     toggleAxis(axisId) {
         const content = document.getElementById(`axis-content-${axisId}`);
         const icon = document.querySelector(`.axis-container[data-id="${axisId}"] .expand-icon`);
-        
+
         if (content) {
+            const isCurrentlyHidden = content.classList.contains('hidden');
             content.classList.toggle('hidden');
             icon.classList.toggle('expanded');
+
+            // Save the new state (opposite of current hidden state)
+            this.setExpandedState(`axis-${axisId}`, isCurrentlyHidden);
         }
     }
 
@@ -523,8 +853,12 @@ class RoadmapManager {
         const icon = document.querySelector(`.pipeline-container[data-id="${pipelineId}"] .expand-icon`);
 
         if (container) {
+            const isCurrentlyHidden = container.classList.contains('hidden');
             container.classList.toggle('hidden');
             icon.classList.toggle('expanded');
+
+            // Save the new state (opposite of current hidden state)
+            this.setExpandedState(`pipeline-${pipelineId}`, isCurrentlyHidden);
         }
     }
 
@@ -920,6 +1254,17 @@ class RoadmapManager {
         document.querySelectorAll('.expand-icon').forEach(icon => {
             icon.classList.add('expanded');
         });
+
+        // Update all axes and pipelines in localStorage to expanded
+        if (this.data && this.data.axes) {
+            this.data.axes.forEach(axis => {
+                this.setExpandedState(`axis-${axis.id}`, true);
+                const items = axis.pipelines || axis.components || axis.phases || [];
+                items.forEach(item => {
+                    this.setExpandedState(`pipeline-${item.id}`, true);
+                });
+            });
+        }
     }
 
     collapseAll() {
@@ -929,6 +1274,56 @@ class RoadmapManager {
         document.querySelectorAll('.expand-icon').forEach(icon => {
             icon.classList.remove('expanded');
         });
+
+        // Update all axes and pipelines in localStorage to collapsed
+        if (this.data && this.data.axes) {
+            this.data.axes.forEach(axis => {
+                this.setExpandedState(`axis-${axis.id}`, false);
+                const items = axis.pipelines || axis.components || axis.phases || [];
+                items.forEach(item => {
+                    this.setExpandedState(`pipeline-${item.id}`, false);
+                });
+            });
+        }
+    }
+
+    expandActive() {
+        // First collapse all
+        this.collapseAll();
+
+        // Then expand only items with progress > 0
+        if (this.data && this.data.axes) {
+            this.data.axes.forEach(axis => {
+                const axisProgress = this.calculateProgress(axis);
+                if (axisProgress > 0) {
+                    // Expand the axis
+                    const axisContent = document.getElementById(`axis-content-${axis.id}`);
+                    const axisIcon = document.querySelector(`.axis-container[data-id="${axis.id}"] .expand-icon`);
+                    if (axisContent && axisIcon) {
+                        axisContent.classList.remove('hidden');
+                        axisIcon.classList.add('expanded');
+                        this.setExpandedState(`axis-${axis.id}`, true);
+                    }
+
+                    // Check pipelines within this axis
+                    const items = axis.pipelines || axis.components || axis.phases || [];
+                    items.forEach(item => {
+                        const itemProgress = this.calculateProgress(item);
+                        if (itemProgress > 0) {
+                            const itemContent = document.getElementById(`pipeline-content-${item.id}`);
+                            const itemIcon = document.querySelector(`.pipeline-container[data-id="${item.id}"] .expand-icon`);
+                            if (itemContent && itemIcon) {
+                                itemContent.classList.remove('hidden');
+                                itemIcon.classList.add('expanded');
+                                this.setExpandedState(`pipeline-${item.id}`, true);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        this.showToast('Expanded all sections with progress', 'success');
     }
 
     toggleSidebar() {
@@ -1007,6 +1402,49 @@ class RoadmapManager {
         return 'id-' + Math.random().toString(36).substr(2, 9);
     }
 
+    // Expanded state management with localStorage persistence
+    loadExpandedState() {
+        try {
+            const saved = localStorage.getItem('roadmap-expanded-state');
+            return saved ? JSON.parse(saved) : {};
+        } catch (error) {
+            console.warn('Failed to load expanded state from localStorage:', error);
+            return {};
+        }
+    }
+
+    saveExpandedState() {
+        try {
+            localStorage.setItem('roadmap-expanded-state', JSON.stringify(this.expandedState));
+        } catch (error) {
+            console.warn('Failed to save expanded state to localStorage:', error);
+        }
+    }
+
+    getExpandedState(key) {
+        // Check if we have a saved state for this item
+        if (this.expandedState.hasOwnProperty(key)) {
+            return this.expandedState[key];
+        }
+
+        // Smart auto-expand: expand items with progress > 0
+        if (this.data) {
+            const itemId = key.replace(/^(axis|pipeline)-/, '');
+            const item = this.findItemById(itemId);
+            if (item && this.calculateProgress(item) > 0) {
+                return true;
+            }
+        }
+
+        // Default to collapsed
+        return false;
+    }
+
+    setExpandedState(key, expanded) {
+        this.expandedState[key] = expanded;
+        this.saveExpandedState();
+    }
+
     attachEventListeners() {
         // Form submission
         document.getElementById('edit-form').addEventListener('submit', (e) => {
@@ -1044,6 +1482,226 @@ class RoadmapManager {
     attachContentEventListeners() {
         // Re-attach any dynamic event listeners after content is rendered
         // This is called after renderContent() to ensure new elements have event handlers
+
+        // Kanban drag-and-drop functionality
+        if (this.currentView === 'kanban') {
+            this.setupKanbanDragAndDrop();
+        }
+    }
+
+    setupKanbanDragAndDrop() {
+        // Handle drag start
+        document.querySelectorAll('.kanban-card').forEach(card => {
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.dataset.id);
+                e.target.classList.add('dragging');
+
+                // Add visual feedback to drop zones
+                document.querySelectorAll('.kanban-cards').forEach(zone => {
+                    zone.classList.add('drop-zone-active');
+                });
+            });
+
+            card.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+
+                // Remove drop zone feedback
+                document.querySelectorAll('.kanban-cards').forEach(zone => {
+                    zone.classList.remove('drop-zone-active', 'drop-zone-hover');
+                });
+            });
+        });
+
+        // Handle drop zones
+        document.querySelectorAll('.kanban-cards').forEach(dropZone => {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                dropZone.classList.add('drop-zone-hover');
+            });
+
+            dropZone.addEventListener('dragleave', (e) => {
+                // Only remove hover if we're actually leaving the drop zone
+                if (!dropZone.contains(e.relatedTarget)) {
+                    dropZone.classList.remove('drop-zone-hover');
+                }
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const itemId = e.dataTransfer.getData('text/plain');
+                const targetColumn = e.currentTarget.dataset.column;
+
+                dropZone.classList.remove('drop-zone-hover');
+
+                if (itemId && targetColumn) {
+                    this.moveCardToColumn(itemId, targetColumn);
+                }
+            });
+        });
+    }
+
+    moveCardToColumn(itemId, targetColumn) {
+        const item = this.findItemById(itemId);
+        if (!item) return;
+
+        // Map columns to progress ranges
+        const progressMap = {
+            'Not Started': 0,
+            'In Progress': 25,
+            'Review': 75,
+            'Completed': 100
+        };
+
+        const newProgress = progressMap[targetColumn];
+        if (newProgress !== undefined) {
+            const oldProgress = this.calculateProgress(item);
+            item.progress = newProgress;
+
+            this.saveData();
+            this.renderContent(); // Re-render Kanban view
+            this.updateProgressOverview();
+
+            this.showToast(
+                `"${item.title}" moved to ${targetColumn} (${newProgress}% progress)`,
+                'success'
+            );
+        }
+    }
+
+    quickEditProgress(itemId, currentProgress) {
+        this.editProgress(itemId, currentProgress, null);
+    }
+
+    // Enhanced Grid View Methods
+    toggleGridCard(axisId) {
+        const isCurrentlyExpanded = this.getExpandedState(`grid-${axisId}`);
+        this.setExpandedState(`grid-${axisId}`, !isCurrentlyExpanded);
+        this.renderContent(); // Re-render to update expansion state
+    }
+
+    toggleFocusMode() {
+        this.gridFocusMode = !this.gridFocusMode;
+        this.renderContent(); // Re-render to apply focus mode
+        this.showToast(
+            this.gridFocusMode ? 'Focus mode enabled - showing active items' : 'Focus mode disabled',
+            'success'
+        );
+    }
+
+    expandAllGridCards() {
+        if (this.data && this.data.axes) {
+            this.data.axes.forEach(axis => {
+                this.setExpandedState(`grid-${axis.id}`, true);
+            });
+            this.renderContent(); // Re-render to show all expanded
+            this.showToast('All cards expanded', 'success');
+        }
+    }
+
+    updateAxisProgress(axisId, newProgress) {
+        const item = this.findItemById(axisId);
+        if (item) {
+            item.progress = parseInt(newProgress);
+            this.saveData();
+            this.updateProgressOverview();
+
+            // Update the visual feedback immediately
+            const card = document.querySelector(`.grid-card[data-id="${axisId}"]`);
+            if (card) {
+                // Update donut chart
+                const progressRing = card.querySelector('.progress-ring');
+                if (progressRing) {
+                    const offset = 219.9 - (newProgress / 100) * 219.9;
+                    progressRing.style.strokeDashoffset = offset;
+                }
+
+                // Update percentage display
+                const percentage = card.querySelector('.progress-percentage');
+                if (percentage) {
+                    percentage.textContent = `${newProgress}%`;
+                }
+
+                // Update priority and active badges
+                const priorityScore = parseInt(newProgress) + (item.pipelines?.length || 0) * 10;
+                const priorityLevel = priorityScore > 50 ? 'high' : priorityScore > 20 ? 'medium' : 'low';
+
+                card.className = card.className.replace(/priority-\w+/, `priority-${priorityLevel}`);
+
+                const badges = card.querySelector('.grid-card-badges');
+                if (badges && newProgress > 0 && !badges.querySelector('.active')) {
+                    badges.insertAdjacentHTML('beforeend', '<span class="grid-card-badge active">Active</span>');
+                } else if (badges && newProgress === 0) {
+                    const activeBadge = badges.querySelector('.active');
+                    if (activeBadge) activeBadge.remove();
+                }
+            }
+
+            this.showToast(`Progress updated to ${newProgress}%`, 'success');
+        }
+    }
+
+    // Enhanced Timeline View Methods
+    toggleTimelineAxis(axisId) {
+        const isCurrentlyExpanded = this.getExpandedState(`timeline-${axisId}`);
+        this.setExpandedState(`timeline-${axisId}`, !isCurrentlyExpanded);
+        this.renderContent(); // Re-render to update expansion state
+    }
+
+    toggleTimelineMilestones() {
+        this.timelineShowMilestones = !this.timelineShowMilestones;
+        this.renderContent();
+        this.showToast(
+            this.timelineShowMilestones ? 'Milestones shown' : 'Milestones hidden',
+            'success'
+        );
+    }
+
+    toggleTimelineDependencies() {
+        this.timelineShowDependencies = !this.timelineShowDependencies;
+        this.renderContent();
+        this.showToast(
+            this.timelineShowDependencies ? 'Dependencies shown' : 'Dependencies hidden',
+            'success'
+        );
+    }
+
+    filterTimeline(filter) {
+        this.timelineFilter = filter;
+        this.renderContent();
+        this.showToast(`Showing ${filter} items`, 'success');
+    }
+
+    editTimelineItem(itemId) {
+        // Open a simple modal for editing timeline properties
+        const item = this.findItemById(itemId);
+        if (!item) return;
+
+        const startDate = item.startDate || new Date().toISOString().split('T')[0];
+        const estimatedWeeks = item.estimatedWeeks || this.estimateTimelineForItem(item);
+
+        const newStartDate = prompt(`Start date for "${item.title}":`, startDate);
+        if (newStartDate && newStartDate !== startDate) {
+            item.startDate = newStartDate;
+
+            const newWeeks = prompt(`Estimated duration (weeks):`, estimatedWeeks);
+            if (newWeeks && !isNaN(newWeeks)) {
+                item.estimatedWeeks = parseInt(newWeeks);
+            }
+
+            this.saveData();
+            this.renderContent();
+            this.showToast('Timeline updated', 'success');
+        }
+    }
+
+    startTimelineDrag(itemId, handle, event) {
+        // Placeholder for timeline drag functionality
+        event.preventDefault();
+        event.stopPropagation();
+
+        // For now, just show a message
+        this.showToast(`Timeline dragging coming soon! (${handle} handle)`, 'info');
     }
 }
 

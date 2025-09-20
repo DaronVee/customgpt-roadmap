@@ -10,14 +10,14 @@
         "id": "ec01d052-d483-4ade-b93d-65f593fee880",
         "title": "Knowledge Retrieval Enhancement",
         "type": "axis",
-        "progress": 0,
+        "progress": 50,
         "validated": false,
         "pipelines": [
           {
             "id": "09d295a8-1230-431b-b015-f650efd4631a",
             "title": "RAG Pipeline",
             "type": "pipeline",
-            "progress": 0,
+            "progress": 25,
             "validated": false,
             "phases": [
               {
@@ -359,5 +359,5 @@
       }
     ]
   },
-  "lastModified": "2025-09-19T20:16:19.556Z"
+  "lastModified": "2025-09-20T07:00:12.646Z"
 }
