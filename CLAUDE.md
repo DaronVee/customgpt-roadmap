@@ -135,20 +135,67 @@ Hierarchical structure: `roadmap` → `axes` → `pipelines/components/phases` �
 
 Each item has:
 - `id` (UUID), `title`, `type`, `progress` (0-100), `validated` (boolean)
+- `status` (workflow state): `'not_started'`, `'in_progress'`, `'review'`, `'completed'`, `'blocked'`
+- `progressWeight` (1 by default) - for weighted progress calculations
 - Container items have arrays of child items
-- Progress is calculated recursively from children
+- Progress is calculated recursively from children with weighted averaging
 
 ### Key Features
 - **Multiple Views**: Tree (hierarchical), Kanban (status-based), Timeline (chronological), Grid (card layout)
+- **Status-Progress Decoupling**: Workflow status independent of completion percentage
 - **Modern Progress System**: Clean, intuitive progress indicators with click-to-edit functionality
+- **Smart Status Management**: Logical status transitions with quick-action buttons
 - **CRUD Operations**: Add/edit/delete any level of the hierarchy
 - **Data Persistence**: Auto-save to backend with optimistic UI updates
 - **Navigation**: Sidebar with scrollable navigation to any item
 - **Expand/Collapse**: Full hierarchy folding support for clean organization
 
+## Status-Progress System (v4.1 - Decoupled Architecture)
+
+### Workflow Status vs Completion Progress
+The application implements a sophisticated dual-tracking system that separates workflow status from completion percentage:
+
+**Workflow Status** (Independent state machine):
+- `'not_started'` - Item hasn't been worked on
+- `'in_progress'` - Currently being developed
+- `'review'` - Ready for evaluation/testing
+- `'completed'` - Finished and validated
+- `'blocked'` - Stuck waiting for external dependency
+
+**Completion Progress** (0-100% percentage):
+- Represents actual work completion independent of workflow stage
+- Can be manually overridden or calculated from children
+- Supports weighted averaging for complex hierarchies
+
+**Key Benefits**:
+- Items can be "in review" at 15% completion
+- Items can be "completed" at 80% if remaining work is deferred
+- Matches real-world project management workflows
+- Enables proper Kanban board organization by status
+
+### Status Badge System
+**Visual Status Indicators**:
+- Gray: Not Started
+- Blue: In Progress
+- Yellow: Review
+- Green: Completed
+- Red: Blocked
+
+**Smart Status Transitions**:
+- Logical next-step suggestions based on current state
+- Context-aware quick action buttons
+- Prevents illogical status changes (e.g., review at 0% progress)
+
+### Data Migration & Status Assignment
+**Automatic Migration Logic** (`server.js:42-56`):
+- Conservative status assignment for existing data
+- Defaults to `'in_progress'` for partial progress
+- Only assigns `'completed'` for 100% progress
+- Avoids automatic `'review'` assignment to prevent confusion
+
 ## UI Design & Progress System
 
-### Current Progress Indicators (v3.0 - Enhanced UX)
+### Current Progress Indicators (v4.1 - Enhanced UX)
 The application features a modern, fully accessible progress visualization system:
 
 **Main Axes (Level 1)**:
@@ -198,14 +245,53 @@ The application features a modern, fully accessible progress visualization syste
 - Data structure modifications require updating both initialization and processing logic
 
 ### Key Files to Understand
-- `server.js:20-208` - Default data structure and initialization
-- `roadmap.js:68-87` - View switching logic
+- `server.js:42-56` - Status migration logic and conservative assignment rules
+- `server.js:89-281` - Default data structure with status fields initialization
+- `roadmap.js:927-945` - Status badge creation and display logic
+- `roadmap.js:946-1050` - Progress calculation with weighted averaging
+- `roadmap.js:1051-1120` - Smart status transition logic (`createQuickStatusActions`)
 - `roadmap.js:1-41` - Data loading and API communication
 - `roadmap.js:479-509` - Progress editing system (`editProgress`, `updateProgress`)
 - `roadmap.js:100-225` - Modern progress indicator rendering
 - `styles.css:900-1049` - Progress visualization CSS (circular rings, bars, dots)
+- `styles.css:1200-1350` - Status badge styling and color schemes
 
 ### Common Tasks
 - **Add new view**: Create render method in `RoadmapManager`, update `renderContent()` switch
 - **Modify data structure**: Update initialization in `server.js` and processing in `roadmap.js`
 - **Add API endpoint**: Follow pattern in `server.js` with error handling
+- **Modify status logic**: Update `addStatusToItem()` in `server.js` and `createQuickStatusActions()` in `roadmap.js`
+
+## Troubleshooting & Known Issues
+
+### Issue: Yellow Review Labels Appearing Incorrectly
+**Problem**: Status badges showing "Review" when items should be "Not Started"
+**Root Cause**: Migration logic was too aggressive in assigning 'review' status to items with ≥50% progress
+**Solution**: Updated `server.js:42-56` to use conservative status assignment, defaulting to 'in_progress' for partial progress
+**Fix Applied**: Commit `0aab61c` - Conservative migration logic implemented
+
+### Issue: UI Changes Not Visible After Deployment
+**Problem**: New features not appearing on production despite successful Railway deployment
+**Root Cause**: Aggressive browser caching of static assets
+**Solution**: Implemented comprehensive cache-busting strategy:
+- Version parameters in HTML (`?v=4.1.0&t=20250920`)
+- Cache-Control headers for different file types
+- Force reload of CSS/JS files
+**Prevention**: Always test production URL after deployment, not just local
+
+### Issue: Tree View Overwhelming with Auto-Expansion
+**Problem**: Tree view automatically expanding all sections, making it hard to navigate
+**Solution**: Implemented collapsed-by-default state with localStorage persistence
+**Enhancement**: Added smart auto-expand for items with progress
+
+### Issue: Confusing Quick Action Buttons
+**Problem**: "Review" buttons appearing for items at 0% progress
+**Solution**: Implemented logical status transitions that filter inappropriate next steps based on current context
+**Logic**: Items at 0% progress cannot transition directly to 'review' status
+
+### Data Integrity Best Practices
+1. **Always backup data** before major migrations
+2. **Test migration logic** on development data first
+3. **Use conservative defaults** for automatic status assignment
+4. **Validate status-progress relationships** after bulk operations
+5. **Monitor for logical inconsistencies** (e.g., completed items with 0% progress)
